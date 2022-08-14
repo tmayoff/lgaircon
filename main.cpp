@@ -1,6 +1,8 @@
 #include <iostream>
-#include <wiringPi.h>
+#include <pigpio.h>
 
 int main () {
-  std::cout << "Hello World" << std::endl;
+  if (gpioInitialize() >= 0) {
+   std::cout << "GPIO initialized" << std::endl; 
+  }
 }
