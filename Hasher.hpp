@@ -2,8 +2,23 @@
 #define HASHER_HPP
 
 #include <cstdint>
+#include <string>
 
 class Hasher {
+  enum class Level {Falling = 0, Rising = 1, NoChange = 2};
+  static const std::string GetLevelStr(Level l) {
+    switch (l) {
+    case Level::Falling:
+      return "Falling";
+    case Level::Rising:
+      return "Rising";
+    case Level::NoChange:
+      return "No Change";
+    default:
+      return "Unknown";
+    } 
+  }
+
   public:
     Hasher(int pin, int timeout);
 

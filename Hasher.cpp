@@ -61,7 +61,7 @@ void Hasher::_callback(int gpio, int level, uint32_t tick, void *user) {
 
    Hasher *mySelf = (Hasher *) user;
 
-   std::cout << "Receiving: (gpio " << gpio << ") (level " << level << ") (tick " << tick << ")" << std::endl;
+   std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick " << tick << ")" << std::endl;
 
    mySelf->_callback(gpio, level, tick); /* Call the instance callback. */
 }
