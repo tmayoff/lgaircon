@@ -22,42 +22,61 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
    std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
 
    if (level != PI_TIMEOUT) {
-      if (!inCode) {
+      auto edge = lastTick - tick;
+      lastTick = tick;
+
+      if (edge > PreambleUS && !inCode) {
+         // Start of code
          inCode = true;
-
          gpioSetWatchdog(gpio, timeout);
-
-         hash_val = 2166136261U; /* FNV_BASIS_32 */
-
-         edges = 1;
-
-         t1 = 0;
-         t2 = 0;
-         t3 = 0;
-         t4 = tick;
-      } else {
-         edges++;
-
-         t1 = t2;
-         t2 = t3;
-         t3 = t4;
-         t4 = tick;
-
-         if (edges > 3) _hash(t2-t1, t4-t3);
-      }
-   } else {
-      if (inCode) {
+      } else if (edge > PostambleUS && inCode) {
+         // End of code
          inCode = false;
-
          gpioSetWatchdog(gpio, 0);
 
-         // Anything less is probably noise.
-         if (edges > 12) {
-            std::cout << hash_val << std::endl;
-            // (mycallback)(hash_val);
-         }
+         // TODO end_code
+         for (auto e : code) 
+            std::cout << e;
+         std::cout << std::endl;
+      } else if (inCode) {
+         code.push_back(edge);
+         std::cout << hash_val << std::endl;
       }
-   }
+
+   //    if (!inCode) {
+   //       inCode = true;
+
+
+   //       hash_val = 2166136261U; /* FNV_BASIS_32 */
+
+   //       edges = 1;
+
+   //       t1 = 0;
+   //       t2 = 0;
+   //       t3 = 0;
+   //       t4 = tick;
+   //    } else {
+   //       edges++;
+
+   //       t1 = t2;
+   //       t2 = t3;
+   //       t3 = t4;
+   //       t4 = tick;
+
+   //       if (edges > 3) _hash(t2-t1, t4-t3);
+   //    }
+   // } else {
+   //    if (inCode) {
+   //       inCode = false;
+
+
+   //       // Anything less is probably noise.
+   //       if (edges > 12) {
+   //          lastTick = INT32_MAX;
+   //          // (mycallback)(hash_val);
+   //       }
+   //    }
+   // }
 
    lastTick = tick;
 }
