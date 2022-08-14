@@ -4,13 +4,12 @@
 
 #include "Hasher.hpp"
 
-
 int main () {
   std::cout << "Initializing..." << std::endl;
   if (gpioInitialise() < 0) exit(EXIT_FAILURE);
   std::cout << "Initialized." << std::endl;
 
-  Hasher ir(17, 5);
+  Hasher ir(19, 5);
 
   sleep(300);
 }

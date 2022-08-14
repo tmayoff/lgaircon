@@ -15,10 +15,8 @@ void Hasher::_hash(int old_val, int new_val) {
 }
 
 void Hasher::_callback(int pin, int level, uint32_t tick) {
-   if (level != PI_TIMEOUT)
-   {
-      if (!inCode)
-      {
+   if (level != PI_TIMEOUT) {
+      if (!inCode) {
          inCode = true;
 
          gpioSetWatchdog(pin, timeout);
@@ -31,9 +29,7 @@ void Hasher::_callback(int pin, int level, uint32_t tick) {
          t2 = 0;
          t3 = 0;
          t4 = tick;
-      }
-      else
-      {
+      } else {
          edges++;
 
          t1 = t2;
@@ -43,18 +39,15 @@ void Hasher::_callback(int pin, int level, uint32_t tick) {
 
          if (edges > 3) _hash(t2-t1, t4-t3);
       }
-   }
-   else
-   {
-      if (inCode)
-      {
+   } else {
+      if (inCode) {
          inCode = false;
 
          gpioSetWatchdog(pin, 0);
 
-         if (edges > 12) /* Anything less is probably noise. */
-         {
-            std::cout << "SIGNLA?" << std::endl;
+         // Anything less is probably noise.
+         if (edges > 12) {
+            std::cout << hash_val << std::endl;
             // (mycallback)(hash_val);
          }
       }
