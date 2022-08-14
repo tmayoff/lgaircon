@@ -1,7 +1,9 @@
 #include <iostream>
+#include <unistd.h>
 #include <pigpio.h>
 
 #include "Hasher.hpp"
+
 
 int main () {
   if (gpioInitialise() < 0) exit(EXIT_FAILURE);
