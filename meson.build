@@ -4,6 +4,6 @@ project('lgaircon', 'cpp',
 
 cpp = meson.get_compiler('cpp')
 
-pgpio = cpp.find_library('pigpio')
+pigpio = cpp.find_library('pigpio')
 
-executable('lgaircon', 'main.cpp', dependencies: pgpio)
+executable('lgaircon', 'main.cpp', dependencies: pigpio)
