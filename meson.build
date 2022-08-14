@@ -6,4 +6,4 @@ cpp = meson.get_compiler('cpp')
 
 pigpio = cpp.find_library('pigpio')
 
-executable('lgaircon', 'main.cpp', dependencies: pigpio)
+executable('lgaircon', 'main.cpp', 'Hasher.cpp', dependencies: pigpio)
