@@ -16,10 +16,10 @@ void Hasher::_hash(int old_val, int new_val) {
 
 void Hasher::_callback(int gpio, int level, uint32_t tick) {
 
-   if (lastTick == INT32_MAX) lastTick = tick;
-   auto delta = tick - lastTick;
+   // if (lastTick == INT32_MAX) lastTick = tick;
+   // auto delta = tick - lastTick;
 
-   std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
+   // std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
 
    if (level != PI_TIMEOUT) {
       auto edge = lastTick - tick;
@@ -40,7 +40,6 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
          std::cout << std::endl;
       } else if (inCode) {
          code.push_back(edge);
-         std::cout << hash_val << std::endl;
       }
    }
 
