@@ -9,5 +9,5 @@ void callbackFunc(int pin, int level, uint32_t tick, void *user) {
 
 Hasher::Hasher(int pin, int timeout): pin(pin), timeout(timeout) {
     gpioSetMode(pin, PI_INPUT);
-    gpioSetAlertFunctionEx(pin, callbackFunc, (void*)this);
+    gpioSetAlertFuncEx(pin, callbackFunc, (void*)this);
 }
