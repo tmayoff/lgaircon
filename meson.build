@@ -4,6 +4,12 @@ project('lgaircon', 'cpp',
 
 cpp = meson.get_compiler('cpp')
 
-pigpio = cpp.find_library('pigpio')
+pigpio = cpp.find_library('pigpio', required: false)
+
+if not pigpio.found()
+  cmake = import('cmake')
+  pigio_proj = cmake.subproject('pigpio')
+  pigpio = pigio_proj.dependency('pigpio')
+endif 
 
 executable('lgaircon', 'main.cpp', 'Hasher.cpp', dependencies: pigpio)
