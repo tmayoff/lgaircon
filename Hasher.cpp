@@ -4,16 +4,14 @@
 #include <pigpio.h>
 
 void callbackFunc(int pin, int level, uint32_t tick, void *user) {
-
     Hasher *self = (Hasher*) user;
-    user->_callback(pin, level, tick);
+    self->callback(pin, level, tick);
 }
 
 Hasher::Hasher(int pin, int timeout): pin(pin), timeout(timeout) {
     gpioSetMode(pin, PI_INPUT);
     gpioSetAlertFuncEx(pin, callbackFunc, (void*)this);
 }
-
 
 void Hasher::callback(int pin, int level, uint32_t tick) {
     if (level != PI_TIMEOUT) {
