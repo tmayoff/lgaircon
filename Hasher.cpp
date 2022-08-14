@@ -14,12 +14,18 @@ void Hasher::_hash(int old_val, int new_val) {
    hash_val *= 16777619; /* FNV_PRIME_32 */
 }
 
-void Hasher::_callback(int pin, int level, uint32_t tick) {
+void Hasher::_callback(int gpio, int level, uint32_t tick) {
+
+   if (lastTick == INT32_MAX) lastTick = tick;
+   auto delta = tick - lastTick;
+
+   std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
+
    if (level != PI_TIMEOUT) {
       if (!inCode) {
          inCode = true;
 
-         gpioSetWatchdog(pin, timeout);
+         gpioSetWatchdog(gpio, timeout);
 
          hash_val = 2166136261U; /* FNV_BASIS_32 */
 
@@ -43,7 +49,7 @@ void Hasher::_callback(int pin, int level, uint32_t tick) {
       if (inCode) {
          inCode = false;
 
-         gpioSetWatchdog(pin, 0);
+         gpioSetWatchdog(gpio, 0);
 
          // Anything less is probably noise.
          if (edges > 12) {
@@ -52,6 +58,8 @@ void Hasher::_callback(int pin, int level, uint32_t tick) {
          }
       }
    }
+
+   lastTick = tick;
 }
 
 void Hasher::_callback(int gpio, int level, uint32_t tick, void *user) {
@@ -60,8 +68,6 @@ void Hasher::_callback(int gpio, int level, uint32_t tick, void *user) {
    */
 
    Hasher *mySelf = (Hasher *) user;
-
-   std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick " << tick << ")" << std::endl;
 
    mySelf->_callback(gpio, level, tick); /* Call the instance callback. */
 }

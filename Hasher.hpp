@@ -28,6 +28,7 @@ class Hasher {
     void _hash(int old_val, int new_val);
 
   private:
+    uint32_t lastTick = INT32_MAX;
     bool inCode = false;
     int pin;
     int timeout;
