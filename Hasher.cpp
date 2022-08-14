@@ -42,6 +42,7 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
          code.push_back(edge);
          std::cout << hash_val << std::endl;
       }
+   }
 
    //    if (!inCode) {
    //       inCode = true;
