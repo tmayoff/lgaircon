@@ -31,7 +31,7 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
 
             // TODO end_code
             for (uint32_t e : code) 
-               std::cout << e;
+               std::cout << std::to_string(e);
             std::cout << std::endl;
          } else if (inCode) {
             code.push_back(edge);
