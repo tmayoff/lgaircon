@@ -6,9 +6,11 @@
 
 
 int main () {
+  std::cout << "Initializing..." << std::endl;
   if (gpioInitialise() < 0) exit(EXIT_FAILURE);
+  std::cout << "Initialized." << std::endl;
 
-  Hasher ir(7, 5);
+  Hasher ir(17, 5);
 
   sleep(300);
 }
