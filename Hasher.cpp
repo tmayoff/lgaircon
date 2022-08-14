@@ -15,85 +15,43 @@ void Hasher::_hash(int old_val, int new_val) {
 }
 
 void Hasher::_callback(int gpio, int level, uint32_t tick) {
-
-   // if (lastTick == INT32_MAX) lastTick = tick;
-   // auto delta = tick - lastTick;
-
-   // std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
-
    if (level != PI_TIMEOUT) {
       uint32_t edge = lastTick - tick;
       lastTick = tick;
 
-      if (edge > PreambleUS && !inCode) {
-         // Start of code
-         inCode = true;
-         gpioSetWatchdog(gpio, timeout);
-      } else if (edge > PostambleUS && inCode) {
-         // End of code
-         inCode = false;
-         gpioSetWatchdog(gpio, 0);
+      if (fetchingCode) {
+         if (edge > PreambleUS && !inCode) {
+            // Start of code
+            inCode = true;
+            gpioSetWatchdog(gpio, timeout);
+         } else if (edge > PostambleUS && inCode) {
+            // End of code
+            inCode = false;
+            gpioSetWatchdog(gpio, 0);
 
-         // TODO end_code
-         for (uint32_t e : code) 
-            std::cout << e;
-         std::cout << std::endl;
-      } else if (inCode) {
-         code.push_back(edge);
+            // TODO end_code
+            for (uint32_t e : code) 
+               std::cout << e;
+            std::cout << std::endl;
+         } else if (inCode) {
+            code.push_back(edge);
+         }
+      }
+   } else {
+      gpioSetWatchdog(gpio, 0);
+      if (inCode) {
+         inCode = false;
       }
    }
-
-   //    if (!inCode) {
-   //       inCode = true;
-
-
-   //       hash_val = 2166136261U; /* FNV_BASIS_32 */
-
-   //       edges = 1;
-
-   //       t1 = 0;
-   //       t2 = 0;
-   //       t3 = 0;
-   //       t4 = tick;
-   //    } else {
-   //       edges++;
-
-   //       t1 = t2;
-   //       t2 = t3;
-   //       t3 = t4;
-   //       t4 = tick;
-
-   //       if (edges > 3) _hash(t2-t1, t4-t3);
-   //    }
-   // } else {
-   //    if (inCode) {
-   //       inCode = false;
-
-
-   //       // Anything less is probably noise.
-   //       if (edges > 12) {
-   //          lastTick = INT32_MAX;
-   //          // (mycallback)(hash_val);
-   //       }
-   //    }
-   // }
-
-   lastTick = tick;
 }
 
 void Hasher::_callback(int gpio, int level, uint32_t tick, void *user) {
-   /*
-      Need a static callback to link with C.
-   */
-
    Hasher *mySelf = (Hasher *) user;
-
    mySelf->_callback(gpio, level, tick); /* Call the instance callback. */
 }
 
 Hasher::Hasher(int pin, int timeout) : pin(pin), timeout(timeout) {
-
+   fetchingCode = true;
    gpioSetMode(pin, PI_INPUT);
-
    gpioSetAlertFuncEx(pin, _callback, (void *)this);
 }
