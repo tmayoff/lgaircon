@@ -22,7 +22,7 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
    // std::cout << "Receiving: (gpio " << gpio << ") (level " << Hasher::GetLevelStr((Level)level) << ") (tick delta " << delta << ")" << std::endl;
 
    if (level != PI_TIMEOUT) {
-      auto edge = lastTick - tick;
+      uint32_t edge = lastTick - tick;
       lastTick = tick;
 
       if (edge > PreambleUS && !inCode) {
@@ -35,7 +35,7 @@ void Hasher::_callback(int gpio, int level, uint32_t tick) {
          gpioSetWatchdog(gpio, 0);
 
          // TODO end_code
-         for (auto e : code) 
+         for (uint32_t e : code) 
             std::cout << e;
          std::cout << std::endl;
       } else if (inCode) {
