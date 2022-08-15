@@ -1,15 +1,35 @@
 #include <iostream>
 #include <unistd.h>
-#include <pigpio.h>
-
-#include "Hasher.hpp"
+#include <lirc_client.h>
 
 int main () {
-  std::cout << "Initializing..." << std::endl;
-  if (gpioInitialise() < 0) exit(EXIT_FAILURE);
-  std::cout << "Initialized." << std::endl;
+  const char* lircrc_path;
+  lirc_config* config = nullptr;
 
-  Hasher ir(19, 5);
+  if (lirc_init("lgaircon", 1) == -1) {
+    std::cout << "Failed to initialize" << std::endl;
+    return EXIT_FAILURE;
+  }
 
-  sleep(300);
+  if (lirc_readconfig(nullptr, &config, nullptr) != 0) {
+    std::cout << "Failed to read config" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+
+  char* code;
+  char* c;
+  while (lirc_nextcode(&code) == 0) {
+    printf("Code: %s\n", code);
+    int ret = 0;
+    while((ret = lirc_code2char(config, code, &c))) {
+      printf("Command: %s", c);
+    }
+
+    free(code);
+    if (ret == -1) break;
+  }
+
+  lirc_freeconfig(config);
+  lirc_deinit();
 }
