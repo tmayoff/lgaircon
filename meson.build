@@ -4,4 +4,4 @@ project('lgaircon', 'cpp',
 
 lirc = dependency('lirc')
 
-executable('lgaircon', 'main.cpp' dependencies: lirc)
+executable('lgaircon', 'main.cpp', dependencies: lirc)

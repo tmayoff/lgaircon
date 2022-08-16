@@ -16,7 +16,6 @@ int main () {
     return EXIT_FAILURE;
   }
 
-
   char* code;
   char* c;
   while (lirc_nextcode(&code) == 0) {
