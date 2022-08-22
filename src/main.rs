@@ -1,6 +1,7 @@
-use std::{thread, time};
-
 mod lg_ac;
+mod ir;
+
+use ir::IR;
 
 fn main () {
     let ret = liblirc_client_sys::init("lgaircon", 1);
@@ -15,41 +16,13 @@ fn main () {
         return;
     }
 
-    std::thread::spawn(|| {
-        let fd = liblirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
-        if fd.is_err() {
-            println!("\n");
-            return;
-        }
-
-        loop {
-            println!("Sending IR...");
-            let r = liblirc_client_sys::send_one(fd.unwrap(), "LG_AC",  "AC_ON");
-            if r == -1 {
-                println!("Failed to send");
-            }
-
-            println!("Sent IR.");
-            thread::sleep(time::Duration::from_secs(1));
-        }
-    });
-
-    loop {
-        println!("Receiving IR....");
-        let ret_c = liblirc_client_sys::nextcode();
-        if ret_c.is_err() {
-            // println!("failed to get next code\n");
-            break;
-        }
-        println!("Received IR.");
-
-        let raw = ret_c.expect("String Failed");
-
-        println!("{}", raw);
-    } 
+    let mut ir_obj = IR::new();
+    ir_obj.startup_ir_read();
 
     let ret = liblirc_client_sys::deinit();
     if ret == -1 {
         println!("Failed to deinit\n");
     }
+
+    ir_obj.join();
 }
