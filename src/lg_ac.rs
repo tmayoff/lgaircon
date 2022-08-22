@@ -11,10 +11,12 @@ enum FanMode {
     Number,
     Low,
     Medium,
-    High
+    High,
+    Chaos
 }
 
 pub struct State {
+    on: bool,
     mode: Mode,
     min_temp: i32,
     max_temp: i32,
@@ -28,8 +30,22 @@ impl State {
 
         let mut s: State = State::default();
         let cmd = command.split(' ').collect::<Vec<&str>>()[2];
+        let parts_count = cmd.split('_').count();
         let mut parts = cmd.split('_');
-        
+
+        if parts_count == 2 {
+            let mut s: State = Default::default();
+            parts.next();
+            let on = parts.next().unwrap();
+            match on {
+                "ON" => s.on = true,
+                "OFF" => s.on = false,
+                _ => return Err("Failed to parse ON/OFF state"),
+            }
+
+            return Ok(s);
+        }
+
         // get mode
         let mode = parts.next().unwrap();
         match mode {
@@ -45,6 +61,7 @@ impl State {
             "LOW" => s.fan_mode = FanMode::Low,
             "MED" => s.fan_mode = FanMode::Medium,
             "HIGH" => s.fan_mode = FanMode::High,
+            "CHAOS" => s.fan_mode = FanMode::Chaos,
             &_ => {
                 let f:i32 = fanspeed.parse().expect("Expected a number");
                 s.fan_mode = FanMode::Number;
@@ -74,7 +91,8 @@ impl State {
             FanMode::Number => cmd += state.fan_speed.to_string().as_str(),
             FanMode::Low => cmd += "LOW",
             FanMode::Medium => cmd += "MED",
-            FanMode::High => cmd += "HIGH"
+            FanMode::High => cmd += "HIGH",
+            FanMode::Chaos => cmd += "CHAOS",
         }
 
         cmd += "_";
@@ -89,6 +107,7 @@ impl Default for State {
     fn default() -> Self {
         State {
             mode: Mode::Cool,
+            on: false,
             min_temp: 18,
             max_temp: 30,
             cur_temp: 18,
@@ -114,6 +133,7 @@ fn from_lirc_command_test() {
 fn from_state_test() {
     let s = State {
         mode: Mode::Cool,
+        on: true,
         min_temp: 18,
         max_temp: 30,
         cur_temp: 21,

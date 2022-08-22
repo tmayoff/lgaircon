@@ -1,18 +1,26 @@
-use std::{thread::{self, JoinHandle}, time};
+use std::thread::JoinHandle;
 
 use crate::lg_ac::State;
 
 pub struct IR {
     pub send_fd: i32,
-    pub send_thread: Option<JoinHandle<()>>,
     running: bool,
 }
 
 impl IR {
     pub fn new () -> Self {
+        let ret = rust_lirc_client_sys::init("lgaircon", 1);
+        if ret == -1 {
+            println!("Initialization Failed\n");
+        }
+
+        let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
+        if fd_ret.is_err() {
+            println!("\n");
+        }
+
         Self {
-            send_fd: 0,
-            send_thread: None,
+            send_fd: fd_ret.unwrap(),
             running: true
         }
     }
@@ -28,38 +36,30 @@ impl IR {
         }
 
         println!("Sent IR.");
-        thread::sleep(time::Duration::from_secs(1));
     }
 
-    pub fn startup_ir_read(&mut self) {
-        let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", true);
-        if fd_ret.is_err() {
-            println!("\n");
-            return;
-        }
-
-        self.send_fd = fd_ret.unwrap();
-        self.running = true;
-
-        self.send_thread = Some(std::thread::spawn(move || {
-            println!("Receiving IR....");
-            let ret_c = rust_lirc_client_sys::nextcode();
-            if ret_c.is_err() {
-                return;
+    pub fn startup_ir_read(&mut self) -> JoinHandle<()> {
+         std::thread::spawn(move || {
+            let ret = rust_lirc_client_sys::init("lgaircon", 1);
+            if ret == -1 {
+                println!("Initialization Failed\n");
             }
-            println!("Received IR.");
-            
-            let raw = ret_c.expect("String Failed");
-            // TODO send this somewhere
-            let _newState = State::from_lirc_command(&raw);
 
-            println!("{}", raw);
-        }));
-    }
+            loop {
+                println!("Receiving IR....");
+                let ret_c = rust_lirc_client_sys::nextcode();
+                if ret_c.is_err() {
+                    println!("Error receiving {:?}", ret_c.err().take());
+                } else {
+                    println!("Received IR.");
 
-    pub fn join (&mut self) {
-        if let Some(t) = self.send_thread.take() {
-            t.join().unwrap();
-        }
+                    let raw = ret_c.expect("String Failed");
+                    println!("{}", raw);
+
+                    // TODO send this somewhere
+                    let _newState = State::from_lirc_command(&raw);
+                }
+            }
+        })
     }
 }
