@@ -1,5 +1,7 @@
 use std::{thread, time};
 
+mod lg_ac;
+
 fn main () {
     let ret = liblirc_client_sys::init("lgaircon", 1);
     if ret == -1 {

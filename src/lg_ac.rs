@@ -57,6 +57,32 @@ impl State {
 
         Ok(s)
     }
+
+    pub fn from_state(state: State) -> String {
+        let mut cmd = String::from("");
+
+        match state.mode {
+            Mode::Fan => cmd += "FAN",
+            Mode::Cool => cmd += "AC",
+            Mode::Heat => cmd += "HEAT",
+            Mode::Dehumidifier => cmd += "DEHUM"
+        }
+
+        cmd += "_";
+
+        match state.fan_mode {
+            FanMode::Number => cmd += state.fan_speed.to_string().as_str(),
+            FanMode::Low => cmd += "LOW",
+            FanMode::Medium => cmd += "MED",
+            FanMode::High => cmd += "HIGH"
+        }
+
+        cmd += "_";
+
+        cmd += state.cur_temp.to_string().as_str();
+
+        cmd
+    }
 }
 
 impl Default for State {
@@ -82,4 +108,20 @@ fn from_lirc_command_test() {
     assert_eq!(state.max_temp, 30);
     assert_eq!(state.cur_temp, 21);
     assert_eq!(state.fan_mode, FanMode::High);
+}
+
+#[test]
+fn from_state_test() {
+    let s = State {
+        mode: Mode::Cool,
+        min_temp: 18,
+        max_temp: 30,
+        cur_temp: 21,
+        fan_speed: 0,
+        fan_mode: FanMode::High,
+    };
+
+    let cmd = State::from_state(s);
+    
+    assert_eq!(cmd, "AC_HIGH_21");
 }
