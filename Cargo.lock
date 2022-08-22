@@ -24,7 +24,7 @@ dependencies = [
 name = "lgaircon"
 version = "0.1.0"
 dependencies = [
- "liblirc-client-sys",
+ "rust-lirc-client-sys",
 ]
 
 [[package]]
@@ -34,16 +34,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04c3b4822ccebfa39c02fc03d1534441b22ead323fa0f48bb7ddd8e6ba076a40"
 
 [[package]]
-name = "liblirc-client-sys"
+name = "pkg-config"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
+
+[[package]]
+name = "rust-lirc-client-sys"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b6408dcc8b3aa18d64f0a9965badafd3771c0acb6c0245743b597ec1b0e700f"
 dependencies = [
  "cc",
  "libc",
  "pkg-config",
 ]
-
-[[package]]
-name = "pkg-config"
-version = "0.3.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"

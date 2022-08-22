@@ -22,7 +22,7 @@ impl IR {
         
         let cmd = State::from_state(state);
 
-        let r = liblirc_client_sys::send_one(self.send_fd, "LG_AC",  cmd.as_str());
+        let r = rust_lirc_client_sys::send_one(self.send_fd, "LG_AC",  cmd.as_str());
         if r == -1 {
             println!("Failed to send");
         }
@@ -32,7 +32,7 @@ impl IR {
     }
 
     pub fn startup_ir_read(&mut self) {
-        let fd_ret = liblirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", true);
+        let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", true);
         if fd_ret.is_err() {
             println!("\n");
             return;
@@ -43,7 +43,7 @@ impl IR {
 
         self.send_thread = Some(std::thread::spawn(move || {
             println!("Receiving IR....");
-            let ret_c = liblirc_client_sys::nextcode();
+            let ret_c = rust_lirc_client_sys::nextcode();
             if ret_c.is_err() {
                 return;
             }
