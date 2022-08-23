@@ -1,9 +1,11 @@
 mod lg_ac;
+mod db;
 mod ir;
 
 use std::sync::Mutex;
 
 use ir::IR;
+use db::DB;
 
 fn main () {
     let ir_arc = std::sync::Arc::<Mutex<IR>>::new(Mutex::new(IR::new()));
@@ -13,6 +15,9 @@ fn main () {
     if ret == -1 {
         println!("Failed to deinit\n");
     }
+
+    let mut db = DB::new();
+    db.connect();
 
     loop {
         let mut l = ir_arc.lock().unwrap();
