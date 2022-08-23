@@ -1,9 +1,10 @@
 #[derive(PartialEq, Debug)]
 enum Mode {
     Fan,
+    AI,
     Cool,
+    Dehumidifier,
     Heat,
-    Dehumidifier
 }
 
 #[derive(PartialEq, Debug)]
@@ -33,23 +34,10 @@ impl State {
         let parts_count = cmd.split('_').count();
         let mut parts = cmd.split('_');
 
-        if parts_count == 2 {
-            let mut s: State = Default::default();
-            parts.next();
-            let on = parts.next().unwrap();
-            match on {
-                "ON" => s.on = true,
-                "OFF" => s.on = false,
-                _ => return Err("Failed to parse ON/OFF state"),
-            }
-
-            return Ok(s);
-        }
-
-        // get mode
         let mode = parts.next().unwrap();
         match mode {
             "AC" => s.mode = Mode::Cool,
+            "AI" => s.mode = Mode::AI,
             "HEAT" => s.mode = Mode::Heat,
             "DEHUM" => s.mode = Mode::Dehumidifier,
             _ => return Err("Failed to parse mode"),
@@ -58,8 +46,16 @@ impl State {
         // get fan speed
         let fanspeed = parts.next().unwrap();
         match fanspeed {
+            "ON" => {
+                s.on = true;
+                return Ok(s);
+            },
+            "OFF" => {
+                s.on = false;
+                return Ok(s);
+            }
             "LOW" => s.fan_mode = FanMode::Low,
-            "MED" => s.fan_mode = FanMode::Medium,
+            "MID" => s.fan_mode = FanMode::Medium,
             "HIGH" => s.fan_mode = FanMode::High,
             "CHAOS" => s.fan_mode = FanMode::Chaos,
             &_ => {
@@ -69,8 +65,10 @@ impl State {
             }
         }
 
-        let temp = parts.next().unwrap().parse().expect("Expected a number");
-        s.cur_temp = temp;
+        if parts_count > 2 {
+            let temp = parts.next().unwrap().parse().expect("Expected a number");
+            s.cur_temp = temp;
+        }
 
         Ok(s)
     }
@@ -82,7 +80,8 @@ impl State {
             Mode::Fan => cmd += "FAN",
             Mode::Cool => cmd += "AC",
             Mode::Heat => cmd += "HEAT",
-            Mode::Dehumidifier => cmd += "DEHUM"
+            Mode::Dehumidifier => cmd += "DEHUM",
+            Mode::AI => cmd += "AI",
         }
 
         cmd += "_";
@@ -90,7 +89,7 @@ impl State {
         match state.fan_mode {
             FanMode::Number => cmd += state.fan_speed.to_string().as_str(),
             FanMode::Low => cmd += "LOW",
-            FanMode::Medium => cmd += "MED",
+            FanMode::Medium => cmd += "MID",
             FanMode::High => cmd += "HIGH",
             FanMode::Chaos => cmd += "CHAOS",
         }

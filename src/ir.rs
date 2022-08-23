@@ -1,10 +1,11 @@
-use std::thread::JoinHandle;
+use std::{thread::JoinHandle, collections::LinkedList, sync::{Arc, Mutex}};
 
 use crate::lg_ac::State;
 
 pub struct IR {
     pub send_fd: i32,
     running: bool,
+    pub state_queue: LinkedList<State>
 }
 
 impl IR {
@@ -21,7 +22,8 @@ impl IR {
 
         Self {
             send_fd: fd_ret.unwrap(),
-            running: true
+            running: true,
+            state_queue: LinkedList::new(),
         }
     }
 
@@ -38,7 +40,7 @@ impl IR {
         println!("Sent IR.");
     }
 
-    pub fn startup_ir_read(&mut self) -> JoinHandle<()> {
+    pub fn startup_ir_read(this: Arc<Mutex<Self>>) -> JoinHandle<()> {
          std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
             if ret == -1 {
@@ -57,7 +59,14 @@ impl IR {
                     println!("{}", raw);
 
                     // TODO send this somewhere
-                    let _newState = State::from_lirc_command(&raw);
+                    let ret = State::from_lirc_command(&raw);
+                    match ret {
+                        Err(r) => println!("Failed to decode lirc command: {}", r),
+                        Ok(s) => {
+                            let mut l = this.lock().unwrap();
+                            l.state_queue.push_back(s);
+                        }
+                    }
                 }
             }
         })
