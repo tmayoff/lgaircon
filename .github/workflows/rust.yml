@@ -21,7 +21,7 @@ jobs:
     - name: Update
       run: sudo apt update && sudo apt upgrade
     - name: Install
-      run: sudo apt-get install -y liblirc-dev
+      run: sudo apt-get install -y liblirc-dev libsqlite3-dev
     
     - name: Build
       run: cargo build --verbose
