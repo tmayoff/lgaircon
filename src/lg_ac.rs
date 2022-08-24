@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(PartialEq, Debug)]
 pub enum Mode {
     Fan,
@@ -7,6 +9,19 @@ pub enum Mode {
     Heat,
 }
 
+impl fmt::Display for Mode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Mode::Fan =>          write!(f, "FAN"),
+            Mode::AI =>           write!(f, "AI"),
+            Mode::Cool =>         write!(f, "AC"),
+            Mode::Dehumidifier => write!(f, "DEHUM"),
+            Mode::Heat =>         write!(f, "HEAT"),
+        }
+    } 
+}
+
+
 #[derive(PartialEq, Debug)]
 pub enum FanMode {
     Number,
@@ -15,6 +30,19 @@ pub enum FanMode {
     High,
     Chaos
 }
+
+impl fmt::Display for FanMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            FanMode::Number => write!(f, "NUMBER"),
+            FanMode::Low => write!(f, "LOW"),
+            FanMode::Medium => write!(f, "MID"),
+            FanMode::High => write!(f, "HIGH"),
+            FanMode::Chaos => write!(f, "CHAOS"),
+        }
+    } 
+}
+
 
 pub struct State {
     pub on: bool,

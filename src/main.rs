@@ -17,8 +17,6 @@ fn main () {
     let mut db = DB::new();
     println!("Initialized DB.");
 
-    db.add_setting("test", "100");
-
     // Initialize IR
     println!("Initializing IR...");
     let ir_arc = std::sync::Arc::<Mutex<IR>>::new(Mutex::new(IR::new()));

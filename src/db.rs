@@ -69,6 +69,10 @@ impl DB {
                         return None;
                     }
                     Ok(vals) => {
+                        if vals.len() == 0 {
+                            return None;
+                        }
+
                         let setting = vals[0].clone();
                         return Some(String::from(setting.val));
                     }
@@ -85,11 +89,40 @@ impl DB {
             None => todo!(),
 
             Some(conn) => {
+                match self.get_setting("on") {
+                    None => self.add_setting("on", if new_state.on {"on"} else {"false"}),
+                    Some(_) => self.update_setting("on", if new_state.on {"on"} else {"false"}),
+                }
+
+                match self.get_setting("mode") {
+                    None => self.add_setting("mode", new_state.mode.to_string().as_str()),
+                    Some(_) => self.update_setting("mode", new_state.mode.to_string().as_str()),
+                }
+
+                match self.get_setting("min_temp") {
+                    None => self.add_setting("min_temp", new_state.min_temp.to_string().as_str()),
+                    Some(_) => self.update_setting("min_temp", new_state.min_temp.to_string().as_str()),
+                }
+
+                match self.get_setting("max_temp") {
+                    None => self.add_setting("max_temp", new_state.max_temp.to_string().as_str()),
+                    Some(_) => self.update_setting("max_temp", new_state.max_temp.to_string().as_str()),
+                }
+
                 match self.get_setting("cur_temp") {
                     None => self.add_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
                     Some(_) => self.update_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
                 }
 
+                match self.get_setting("fan_speed") {
+                    None => self.add_setting("fan_speed", new_state.fan_speed.to_string().as_str()),
+                    Some(_) => self.update_setting("fan_speed", new_state.fan_speed.to_string().as_str()),
+                }
+
+                match self.get_setting("fan_mode") {
+                    None => self.add_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
+                    Some(_) => self.update_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
+                }
             }
         }
     }
