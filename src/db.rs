@@ -1,7 +1,9 @@
 use diesel::prelude::*;
 use diesel::SqliteConnection;
+use diesel_migrations::RunMigrationsError;
 
 use crate::db::models::NewSetting;
+use crate::embedded_migrations;
 use crate::lg_ac;
 
 pub mod models;
@@ -21,6 +23,15 @@ impl DB {
 
     pub fn connect() -> SqliteConnection {
         SqliteConnection::establish("app.sqlite").expect("Failed to create/connect to DB")
+    }
+
+    pub fn run_migrations(&mut self) {
+        match &self.conn {
+            None => todo!(),
+            Some(c) => {
+                embedded_migrations::run(c).unwrap()
+            }
+        }
     }
 
     pub fn add_setting<'a>(&mut self, name: &'a str, value: &'a str) {

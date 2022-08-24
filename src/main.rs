@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 mod lg_ac;
 mod db;
@@ -10,11 +12,14 @@ use std::sync::Mutex;
 use ir::IR;
 use db::DB;
 
+embed_migrations!();
+
 fn main () {
 
     // Initialize DB
     println!("Initializing DB...");
     let mut db = DB::new();
+    let _ = db.run_migrations();
     println!("Initialized DB.");
 
     // Initialize IR
