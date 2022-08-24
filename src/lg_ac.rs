@@ -1,5 +1,5 @@
 #[derive(PartialEq, Debug)]
-enum Mode {
+pub enum Mode {
     Fan,
     AI,
     Cool,
@@ -8,7 +8,7 @@ enum Mode {
 }
 
 #[derive(PartialEq, Debug)]
-enum FanMode {
+pub enum FanMode {
     Number,
     Low,
     Medium,
@@ -17,13 +17,13 @@ enum FanMode {
 }
 
 pub struct State {
-    on: bool,
-    mode: Mode,
-    min_temp: i32,
-    max_temp: i32,
-    cur_temp: i32,
-    fan_speed: i32,
-    fan_mode: FanMode,
+    pub on: bool,
+    pub mode: Mode,
+    pub min_temp: i32,
+    pub max_temp: i32,
+    pub cur_temp: i32,
+    pub fan_speed: i32,
+    pub fan_mode: FanMode,
 }
 
 impl State {
