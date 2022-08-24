@@ -1,4 +1,4 @@
-use super::schema::_state;
+use super::schema::state;
 
 #[derive(Clone, Queryable)]
 pub struct Setting {
@@ -7,7 +7,7 @@ pub struct Setting {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[table_name="_state"]
+#[table_name="state"]
 pub struct NewSetting <'a> {
     pub name: &'a str,
     pub val: &'a str,

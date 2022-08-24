@@ -1,5 +1,5 @@
 table! {
-    _state (name) {
+    state (name) {
         name -> Text,
         val -> Text,
     }

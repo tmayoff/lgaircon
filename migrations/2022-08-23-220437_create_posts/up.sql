@@ -1,5 +1,5 @@
 -- Your SQL goes here
-CREATE TABLE _state (
+CREATE TABLE state (
   name VARCHAR NOT NULL PRIMARY KEY,
   val VARCHAR NOT NULL
 )
