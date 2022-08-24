@@ -1,18 +1,33 @@
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+
 mod lg_ac;
+mod db;
 mod ir;
 
 use std::sync::Mutex;
 
 use ir::IR;
+use db::DB;
+
+embed_migrations!();
 
 fn main () {
+
+    // Initialize DB
+    println!("Initializing DB...");
+    let mut db = DB::new();
+    let _ = db.run_migrations();
+    println!("Initialized DB.");
+
+    // Initialize IR
+    println!("Initializing IR...");
     let ir_arc = std::sync::Arc::<Mutex<IR>>::new(Mutex::new(IR::new()));
     let ir_thread = IR::startup_ir_read(ir_arc.clone());
+    println!("Initialized IR.");
 
-    let ret = rust_lirc_client_sys::deinit();
-    if ret == -1 {
-        println!("Failed to deinit\n");
-    }
 
     loop {
         let mut l = ir_arc.lock().unwrap();
@@ -21,11 +36,15 @@ fn main () {
             match s_opt {
                 None => todo!(),
                 Some(s) => {
-                    println!("New State");
-                    todo!("Update state");
+                    db.update_state(s);
                 }
             }
         }
+    }
+
+    let ret = rust_lirc_client_sys::deinit();
+    if ret == -1 {
+        println!("Failed to deinit\n");
     }
 
     ir_thread.join().unwrap();
