@@ -48,6 +48,11 @@ impl IR {
             }
 
             loop {
+                let l = this.lock().unwrap();
+                if !l.running {
+                    break;
+                }
+
                 println!("Receiving IR....");
                 let ret_c = rust_lirc_client_sys::nextcode();
                 if ret_c.is_err() {

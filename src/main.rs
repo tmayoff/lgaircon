@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
 
 mod lg_ac;
 mod db;
@@ -11,8 +9,6 @@ use std::sync::Mutex;
 
 use ir::IR;
 use db::DB;
-
-embed_migrations!();
 
 fn main () {
 
@@ -28,13 +24,15 @@ fn main () {
     let ir_thread = IR::startup_ir_read(ir_arc.clone());
     println!("Initialized IR.");
 
-
     loop {
         let mut l = ir_arc.lock().unwrap();
         if l.state_queue.len() > 0 {
             let s_opt = l.state_queue.pop_back();
             match s_opt {
-                None => todo!(),
+                None => {
+                    println!("Empty State");
+                    break;
+                }
                 Some(s) => {
                     db.update_state(s);
                 }
