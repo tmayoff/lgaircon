@@ -7,7 +7,7 @@ pub struct Setting {
 }
 
 #[derive(Insertable, AsChangeset)]
-#[table_name="state"]
+#[diesel(table_name = state)]
 pub struct NewSetting <'a> {
     pub name: &'a str,
     pub val: &'a str,
