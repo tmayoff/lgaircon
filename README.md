@@ -1,6 +1,7 @@
 # lgaircon
 Controller for my LG Airconditioner 
 
+- https://blog.gordonturner.com/2020/05/31/raspberry-pi-ir-receiver/
 - https://www.digikey.ca/en/maker/blogs/2021/how-to-send-and-receive-ir-signals-with-a-raspberry-pi
 - https://www.hackster.io/austin-stanton/creating-a-raspberry-pi-universal-remote-with-lirc-2fd581
 - https://github.com/raspberrypi/linux/issues/2993#issuecomment-497420228
