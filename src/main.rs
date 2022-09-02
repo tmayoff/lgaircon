@@ -4,6 +4,7 @@ extern crate diesel;
 mod lg_ac;
 mod db;
 mod ir;
+mod ds18b20;
 
 use std::sync::Mutex;
 
@@ -24,7 +25,12 @@ fn main () {
     let ir_thread = IR::startup_ir_read(ir_arc.clone());
     println!("Initialized IR.");
 
+    let temp = ds18b20::DS18B20::new().unwrap();
+
     loop {
+        let t = temp.read_temp().unwrap();
+        println!("{}", t.as_u32());
+
         let mut l = ir_arc.lock().unwrap();
         if l.state_queue.len() > 0 {
             let s_opt = l.state_queue.pop_back();
