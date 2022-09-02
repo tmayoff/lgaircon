@@ -31,6 +31,10 @@ impl MilliCelsius {
         (self.0 as f64) / 1000.0 / 5.0 * 9.0 + 32.0
     }
 
+    pub fn to_celsius(self) -> f64 {
+        (self.0 as f64) / 1000.0
+    }
+
     pub fn as_u32(self) -> u32 {
         self.0
     }

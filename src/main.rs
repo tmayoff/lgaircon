@@ -29,7 +29,7 @@ fn main () {
 
     loop {
         let t = temp.read_temp().unwrap();
-        println!("{}", t.as_u32());
+        println!("{}", t.to_celsius());
 
         let mut l = ir_arc.lock().unwrap();
         if l.state_queue.len() > 0 {
