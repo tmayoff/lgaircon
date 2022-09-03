@@ -42,7 +42,7 @@ impl IR {
         println!("Sent IR.");
     }
 
-    pub fn startup_ir_read(mut self) -> JoinHandle<()> {
+    pub fn startup_ir_read(self) -> JoinHandle<()> {
          std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
             if ret == -1 {

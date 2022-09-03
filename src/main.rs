@@ -36,7 +36,12 @@ fn main () {
         let ir_update = rx.try_recv();
         match ir_update {
             Ok(update) => db.update_state(update),
-            Err(_err) => println!("Err"),
+            Err(err) => {
+                match err {
+                    mpsc::TryRecvError::Disconnected => println!("IR updater disconnected"),
+                    mpsc::TryRecvError::Empty => (),
+                }
+            }
         }
     }
 
