@@ -6,12 +6,14 @@ mod db;
 mod ir;
 mod ds18b20;
 
-use std::sync::Mutex;
+use std::sync::mpsc;
 
 use ir::IR;
 use db::DB;
 
 fn main () {
+
+    let (tx, rx) = mpsc::channel::<lg_ac:: State>();
 
     // Initialize DB
     println!("Initializing DB...");
@@ -21,8 +23,8 @@ fn main () {
 
     // Initialize IR
     println!("Initializing IR...");
-    let ir_arc = std::sync::Arc::<Mutex<IR>>::new(Mutex::new(IR::new()));
-    let ir_thread = IR::startup_ir_read(ir_arc.clone());
+    let ir_arc = IR::new(tx);
+    let ir_thread = IR::startup_ir_read(ir_arc);
     println!("Initialized IR.");
 
     let temp = ds18b20::DS18B20::new().unwrap();
@@ -31,18 +33,10 @@ fn main () {
         let t = temp.read_temp().unwrap();
         println!("{}", t.to_celsius());
 
-        let mut l = ir_arc.lock().unwrap();
-        if l.state_queue.len() > 0 {
-            let s_opt = l.state_queue.pop_back();
-            match s_opt {
-                None => {
-                    println!("Empty State");
-                    break;
-                }
-                Some(s) => {
-                    db.update_state(s);
-                }
-            }
+        let ir_update = rx.try_recv();
+        match ir_update {
+            Ok(update) => db.update_state(update),
+            Err(_err) => println!("Err"),
         }
     }
 
