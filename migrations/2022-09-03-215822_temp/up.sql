@@ -1,0 +1,5 @@
+-- Your SQL goes here
+CREATE TABLE temperature (
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
+    value DECIMAL NOT NULL
+)

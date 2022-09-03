@@ -31,7 +31,7 @@ impl IR {
 
     pub fn send_once (&mut self, state: State)  {
         println!("Sending IR...");
-        
+
         let cmd = State::from_state(state);
 
         let r = rust_lirc_client_sys::send_one(self.send_fd, "LG_AC",  cmd.as_str());
