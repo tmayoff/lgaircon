@@ -42,6 +42,7 @@ fn main () {
         }
 
         let t = temp.read_temp().unwrap();
+        db.new_temp(t.to_celsius());
 
         // IR Receiver Update
         let ir_update = state_rx.try_recv();

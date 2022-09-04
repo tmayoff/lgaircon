@@ -1,6 +1,6 @@
-use std::{thread::JoinHandle, collections::LinkedList, sync::{Arc, Mutex, mpsc::Sender}};
+use std::{thread::JoinHandle, collections::LinkedList, sync::mpsc::Sender};
 
-use crate::lg_ac::{State, self};
+use crate::lg_ac::State;
 
 pub struct IR {
     pub send_fd: i32,

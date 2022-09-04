@@ -5,6 +5,7 @@ use diesel_migrations::MigrationHarness;
 use diesel_migrations::embed_migrations;
 
 use crate::db::models::NewSetting;
+use crate::db::models::NewTemperature;
 use crate::lg_ac;
 
 pub mod models;
@@ -71,6 +72,18 @@ impl DB {
                 return Some(String::from(setting.val));
             }
         }
+    }
+
+    pub fn new_temp(&mut self, temp: f64) {
+        use schema::temperature;
+        let new_temp = NewTemperature {
+            value: temp
+        };
+
+        let ret = diesel::insert_into(temperature::table)
+        .values(new_temp)
+        .execute(&mut self.connection);
+        ret.expect("Error adding temperature");
     }
 
     pub fn update_state(&mut self, new_state: lg_ac::State) {

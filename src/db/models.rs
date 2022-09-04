@@ -1,4 +1,4 @@
-use super::schema::state;
+use super::schema::{state, temperature};
 
 #[derive(Clone, Queryable)]
 pub struct Setting {
@@ -11,4 +11,10 @@ pub struct Setting {
 pub struct NewSetting <'a> {
     pub name: &'a str,
     pub val: &'a str,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = temperature)]
+pub struct NewTemperature {
+    pub value: f64,
 }
