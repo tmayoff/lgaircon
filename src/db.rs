@@ -87,11 +87,6 @@ impl DB {
     }
 
     pub fn update_state(&mut self, new_state: lg_ac::State) {
-        match self.get_setting("on") {
-            None => self.add_setting("on", if new_state.on {"on"} else {"false"}),
-            Some(_) => self.update_setting("on", if new_state.on {"on"} else {"false"}),
-        }
-
         match self.get_setting("mode") {
             None => self.add_setting("mode", new_state.mode.to_string().as_str()),
             Some(_) => self.update_setting("mode", new_state.mode.to_string().as_str()),
@@ -107,9 +102,9 @@ impl DB {
             Some(_) => self.update_setting("max_temp", new_state.max_temp.to_string().as_str()),
         }
 
-        match self.get_setting("cur_temp") {
-            None => self.add_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
-            Some(_) => self.update_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
+        match self.get_setting("target_temp") {
+            None => self.add_setting("target_temp", new_state.target_temp.to_string().as_str()),
+            Some(_) => self.update_setting("target_temp", new_state.target_temp.to_string().as_str()),
         }
 
         match self.get_setting("fan_speed") {
@@ -118,8 +113,8 @@ impl DB {
         }
 
         match self.get_setting("fan_mode") {
-            None => self.add_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
-            Some(_) => self.update_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
+            None => self.add_setting("fan_mode", new_state.target_temp.to_string().as_str()),
+            Some(_) => self.update_setting("fan_mode", new_state.target_temp.to_string().as_str()),
         }
     }
 }

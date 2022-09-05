@@ -38,11 +38,22 @@ async fn main () {
 
         // Initialize IR
         println!("Initializing IR...");
-        let ir_arc = IR::new(state_tx);
-        let ir_thread = IR::startup_ir_read(ir_arc);
-        println!("Initialized IR.");
+        let res = IR::new(state_tx);
+        match res {
+            Err(e) => println!("{}", e),
+            Ok(ir) => {
+                IR::startup_ir_read(ir);
+                println!("Initialized IR.");        
+            }
+        }
 
-        let temp = ds18b20::DS18B20::new().unwrap();
+        let res = ds18b20::DS18B20::new();
+        let mut temp: Option<ds18b20::DS18B20> = None;
+        match res {
+            Err(e) => println!("{}", e),
+            Ok(t) => temp = Some(t),
+        }
+
 
         while running {
             let ctrl = control_rx.try_recv();
@@ -50,9 +61,13 @@ async fn main () {
                 Ok(ctrl) => running = ctrl,
                 Err(_) => ()
             }
-
-            let t = temp.read_temp().unwrap();
-            db.new_temp(t.to_celsius());
+            
+            if let Some(t) = &temp {
+                let t = t.read_temp();
+                if let Ok(t) = t {
+                    db.new_temp(t.to_celsius())
+                }
+            }
 
             // IR Receiver Update
             let ir_update = state_rx.try_recv();
@@ -60,7 +75,10 @@ async fn main () {
                 Ok(update) => db.update_state(update),
                 Err(err) => {
                     match err {
-                        mpsc::TryRecvError::Disconnected => println!("IR updater disconnected"),
+                        mpsc::TryRecvError::Disconnected => {
+                            running = false;
+                            println!("IR updater disconnected");
+                        },
                         mpsc::TryRecvError::Empty => (),
                     }
                 }
@@ -71,10 +89,7 @@ async fn main () {
         if ret == -1 {
             println!("Failed to deinit\n");
         }
-
-        ir_thread.join().unwrap();
     });
-    
 
     apires.await;
 }

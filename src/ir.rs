@@ -10,7 +10,7 @@ pub struct IR {
 }
 
 impl IR {
-    pub fn new (sender: Sender<State>) -> Self {
+    pub fn new (sender: Sender<State>) -> Result<Self, String> {
         let ret = rust_lirc_client_sys::init("lgaircon", 1);
         if ret == -1 {
             println!("Initialization Failed\n");
@@ -18,15 +18,15 @@ impl IR {
 
         let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
         if fd_ret.is_err() {
-            println!("\n");
+            return Err(String::from("Failed to initialize"));
         }
 
-        Self {
+        Ok(Self {
             send_fd: fd_ret.unwrap(),
             running: true,
             state_queue: LinkedList::new(),
             sender
-        }
+        })
     }
 
     pub fn send_once (&mut self, state: State)  {
