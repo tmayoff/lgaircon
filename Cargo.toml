@@ -13,6 +13,7 @@ rocket_codegen = "0.4.11"
 serde = "1.0.144"
 diesel = { version = "2.0.0", features = ["sqlite"] }
 diesel_migrations = "2.0.0"
+spmc = "0.3.0"
 
 [[bin]]
 name = "lgaircon"
