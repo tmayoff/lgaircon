@@ -54,7 +54,6 @@ async fn main () {
             Ok(t) => temp = Some(t),
         }
 
-
         while running {
             let ctrl = control_rx.try_recv();
             match ctrl {

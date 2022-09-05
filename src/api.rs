@@ -15,27 +15,32 @@ struct StateManager {
 #[get("/state")]
 fn index(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State> {
     let l = state.lock();
-    match l {
-        Err(_) => return Json(lg_ac::State::default()),
-        Ok(mut s) => {
-            let res = s.state_rx.try_recv();
-            match res {
-                Ok(new_s) => {
-                    s.last_state = new_s;
-                    return Json(new_s);
-                }
-                Err(_) => {
-                    return Json(s.last_state);
-                }
-            }
-        }
+    if let Ok(s) = l {
+        return Json(s.last_state);
+    } else {
+        return Json(lg_ac::State::default())
     }
 }
 
 pub async fn launch(state_rx: Receiver<lg_ac::State>) {
     let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(StateManager{state_rx, last_state: lg_ac::State::default()}));
+    
+    let cloned = arc.clone();
+    std::thread::spawn(move || {
+        loop {
+            let l = cloned.lock();
+            if let Ok(mut s) = l {
+                let res = s.state_rx.recv();
+                if let Ok(new_s) = res {
+                    println!("Found new state");
+                    s.last_state = new_s;
+                }
+            }
+        }
+    });
+
     let r = rocket::build()
-    .manage(arc)
+    .manage(arc.clone())
     .mount("/", routes![index])
     .launch().await;
     if let Err(_) = r {
