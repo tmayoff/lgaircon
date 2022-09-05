@@ -1,6 +1,8 @@
 use std::fmt;
 
-#[derive(PartialEq, Debug)]
+use serde::Serialize;
+
+#[derive(PartialEq, Debug, Serialize)]
 pub enum Mode {
     Fan,
     AI,
@@ -22,7 +24,7 @@ impl fmt::Display for Mode {
 }
 
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize)]
 pub enum FanMode {
     Number,
     Low,
@@ -43,13 +45,13 @@ impl fmt::Display for FanMode {
     } 
 }
 
-
+#[derive(Serialize)]
 pub struct State {
     pub on: bool,
     pub mode: Mode,
     pub min_temp: i32,
     pub max_temp: i32,
-    pub cur_temp: i32,
+    pub cur_temp: f64,
     pub fan_speed: i32,
     pub fan_mode: FanMode,
 }
@@ -137,7 +139,7 @@ impl Default for State {
             on: false,
             min_temp: 18,
             max_temp: 30,
-            cur_temp: 18,
+            cur_temp: 18.0,
             fan_speed: 0,
             fan_mode: FanMode::Low,
         }
@@ -152,7 +154,7 @@ fn from_lirc_command_test() {
     assert_eq!(state.mode, Mode::Cool);
     assert_eq!(state.min_temp, 18);
     assert_eq!(state.max_temp, 30);
-    assert_eq!(state.cur_temp, 21);
+    assert_eq!(state.cur_temp, 21.0);
     assert_eq!(state.fan_mode, FanMode::High);
 }
 
@@ -163,7 +165,7 @@ fn from_state_test() {
         on: true,
         min_temp: 18,
         max_temp: 30,
-        cur_temp: 21,
+        cur_temp: 21.0,
         fan_speed: 0,
         fan_mode: FanMode::High,
     };

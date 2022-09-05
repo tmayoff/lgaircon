@@ -1,3 +1,8 @@
+
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use]
+extern crate rocket;
+
 #[macro_use]
 extern crate diesel;
 
@@ -7,11 +12,22 @@ mod ir;
 mod ds18b20;
 
 use std::sync::mpsc;
+use rocket::serde::{json::Json};
 
 use ir::IR;
 use db::DB;
 
-fn main () {
+#[get("/state")]
+fn index() -> Json<lg_ac::State> {
+    let s = lg_ac::State::default();
+    Json(s)
+}
+
+
+#[rocket::main]
+async fn main () {
+    rocket::build().mount("/", routes![index]).launch().await.expect("Failed to launch rocket");
+
     let mut running: bool = true;
     let (control_tx, control_rx) = mpsc::channel::<bool>();
     ctrlc::set_handler(move || {
