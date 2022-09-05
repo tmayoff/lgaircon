@@ -65,7 +65,10 @@ impl IR {
                     match ret {
                         Err(r) => println!("Failed to decode lirc command: {}", r),
                         Ok(s) => {
-                            self.sender.send(s).unwrap();
+                            let res = self.sender.send(s);
+                            if let Err(e) = res {
+                                println!("Failed to send State {}", e);
+                            }
                         }
                     }
                 }
