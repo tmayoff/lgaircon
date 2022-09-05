@@ -12,7 +12,7 @@ struct StateManager {
     last_state: lg_ac::State,
 }
 
-#[get("/")]
+#[get("/state")]
 fn index(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State> {
     let l = state.lock();
     match l {
