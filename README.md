@@ -8,7 +8,9 @@ Controller for my LG Airconditioner
 - DS18B20
 - https://www.thingiverse.com/thing:2349678
 
+## Cross Compile
 - https://medium.com/hackernoon/seamlessly-cross-compiling-rust-for-raspberry-pis-ede5e2bd3fe2
+- https://chacin.dev/blog/cross-compiling-rust-for-the-raspberry-pi/
 
 ![image](https://user-images.githubusercontent.com/10094264/185021054-7c6f1233-6354-495f-b7ab-71a685ac02b3.png)
 
