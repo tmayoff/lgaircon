@@ -17,15 +17,22 @@ use std::sync::mpsc;
 use ir::IR;
 use db::DB;
 
-#[rocket::main]
+
 async fn main () {
-    let (state_tx, state_rx) = spmc::channel::<lg_ac::State>();
+    let (mut state_tx, state_rx) = spmc::channel::<lg_ac::State>();
 
     // Initialize DB
     println!("Initializing DB...");
     let mut db = DB::new();
     db.run_migrations();
     println!("Initialized DB.");
+
+    // Get state from DB
+    let starting_state = db.get_state();
+    let res = state_tx.send(starting_state);
+    if let Err(r) = res {
+        println!("Failed to send starting state {}", r);
+    }
 
     let apires = api::launch(state_rx.clone());
 

@@ -25,6 +25,25 @@ impl fmt::Display for Mode {
     } 
 }
 
+impl Mode {
+    pub fn from_string(mode: &str) -> Mode {
+        if mode == "OFF" {
+            return Mode::Off;
+        } else if mode == "Fan" {
+            return Mode::Fan;
+        } else if mode == "AI" {
+            return Mode::AI;
+        } else if mode == "AC" {
+            return Mode::Cool;
+        } else if mode == "DEHUM" {
+            return Mode::Dehumidifier;
+        } else if mode == "HEAT" {
+            return Mode::Heat;
+        } else {
+            panic!("Unknown mode {}", mode);
+        }
+    }
+}
 
 #[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub enum FanMode {
@@ -45,6 +64,22 @@ impl fmt::Display for FanMode {
             FanMode::Chaos => write!(f, "CHAOS"),
         }
     } 
+}
+
+impl FanMode {
+    pub fn from_string(mode: &str) -> FanMode {
+        if mode == "LOW" {
+            return FanMode::Low;
+        } else if mode == "MID" {
+            return FanMode::Medium;
+        } else if mode == "HIGH" {
+            return FanMode::High;
+        } else if mode == "CHAOS" {
+            return FanMode::Chaos;
+        } else {
+            panic!("Unknown fan mode {}", mode);
+        }
+    }
 }
 
 #[derive(Copy, Clone, Serialize)]

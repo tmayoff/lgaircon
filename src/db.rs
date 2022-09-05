@@ -74,6 +74,36 @@ impl DB {
         }
     }
 
+    pub fn get_state (&mut self) -> lg_ac::State {
+        let mut s = lg_ac::State::default();
+
+        if let Some(m) = self.get_setting("mode") {
+            s.mode = lg_ac::Mode::from_string(m.as_str());
+        }
+
+        if let Some(m) = self.get_setting("min_temp") {
+            s.min_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("max_temp") {
+            s.max_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("target_temp") {
+            s.target_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("fan_speed") {
+            s.fan_speed = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("fan_mode") {
+            s.fan_mode = lg_ac::FanMode::from_string(m.as_str());
+        }
+
+        s
+    }
+
     pub fn new_temp(&mut self, temp: f64) {
         use schema::temperature;
         let new_temp = NewTemperature {
