@@ -30,7 +30,7 @@ pub async fn launch(state_rx: Receiver<lg_ac::State>) {
         loop {
             let l = cloned.lock();
             if let Ok(mut s) = l {
-                let res = s.state_rx.recv();
+                let res = s.state_rx.try_recv();
                 if let Ok(new_s) = res {
                     println!("Found new state");
                     s.last_state = new_s;
