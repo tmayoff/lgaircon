@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::Serialize;
 
-#[derive(PartialEq, Debug, Serialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub enum Mode {
     Off,
     Fan,
@@ -26,7 +26,7 @@ impl fmt::Display for Mode {
 }
 
 
-#[derive(PartialEq, Debug, Serialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub enum FanMode {
     Number,
     Low,
@@ -47,7 +47,7 @@ impl fmt::Display for FanMode {
     } 
 }
 
-#[derive(Serialize)]
+#[derive(Copy, Clone, Serialize)]
 pub struct State {
     pub mode: Mode,
     pub min_temp: i32,
