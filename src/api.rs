@@ -37,6 +37,8 @@ pub async fn launch(state_rx: Receiver<lg_ac::State>) {
                 }
                 std::mem::drop(s);
             }
+
+            std::thread::sleep(std::time::Duration::new(1, 0));
         }
     });
 
