@@ -27,7 +27,7 @@ jobs:
       run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
     - name: Switch to rust nightly
-      run: rustup install nightly && rustup default nightly
+      run: rustup -y install nightly && rustup -y default nightly
 
     - name: Build
       run: cargo build --verbose
