@@ -77,7 +77,9 @@ impl FanMode {
         } else if mode == "CHAOS" {
             return FanMode::Chaos;
         } else {
-            panic!("Unknown fan mode {}", mode);
+            println!("Unknown fan mode {}", mode);
+
+            return FanMode::Number;
         }
     }
 }
