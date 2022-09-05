@@ -17,7 +17,7 @@ use std::sync::mpsc;
 use ir::IR;
 use db::DB;
 
-
+#[rocket::main]
 async fn main () {
     let (mut state_tx, state_rx) = spmc::channel::<lg_ac::State>();
 
