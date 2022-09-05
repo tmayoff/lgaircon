@@ -35,6 +35,7 @@ pub async fn launch(state_rx: Receiver<lg_ac::State>) {
                     println!("Found new state");
                     s.last_state = new_s;
                 }
+                std::mem::drop(s);
             }
         }
     });
