@@ -19,22 +19,22 @@ use db::DB;
 
 #[rocket::main]
 async fn main () {
-    let apires = api::launch();
+    let (state_tx, state_rx) = spmc::channel::<lg_ac::State>();
 
-    std::thread::spawn(|| {
+    // Initialize DB
+    println!("Initializing DB...");
+    let mut db = DB::new();
+    db.run_migrations();
+    println!("Initialized DB.");
+
+    let apires = api::launch(state_rx.clone());
+
+    std::thread::spawn(move || {
         let mut running: bool = true;
         let (control_tx, control_rx) = mpsc::channel::<bool>();
         ctrlc::set_handler(move || {
             control_tx.send(false).expect("Failed to send stop signal");
         }).expect("Failed to set ctrl+c handler");
-
-        let (state_tx, state_rx) = mpsc::channel::<lg_ac:: State>();
-
-        // Initialize DB
-        println!("Initializing DB...");
-        let mut db = DB::new();
-        let _ = db.run_migrations();
-        println!("Initialized DB.");
 
         // Initialize IR
         println!("Initializing IR...");

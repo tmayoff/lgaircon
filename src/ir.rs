@@ -1,4 +1,5 @@
-use std::{thread::JoinHandle, collections::LinkedList, sync::mpsc::Sender};
+use std::{thread::JoinHandle, collections::LinkedList};
+use spmc::Sender;
 
 use crate::lg_ac::State;
 
@@ -42,7 +43,7 @@ impl IR {
         println!("Sent IR.");
     }
 
-    pub fn startup_ir_read(self) -> JoinHandle<()> {
+    pub fn startup_ir_read(mut self) -> JoinHandle<()> {
          std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
             if ret == -1 {
