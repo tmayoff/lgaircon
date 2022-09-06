@@ -2,18 +2,19 @@ use core::panic;
 use std::sync::{Mutex, Arc};
 
 use rocket::serde::json::Json;
-use spmc::Receiver;
+use crossbeam_channel::{Receiver, Sender};
 
 use crate::lg_ac;
 
 #[derive(Clone)]
 struct StateManager {
+    state_tx: Sender<lg_ac::State>,
     state_rx: Receiver<lg_ac::State>,
     last_state: lg_ac::State,
 }
 
 #[get("/state")]
-fn index(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State> {
+fn get_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State> {
     let l = state.lock();
     if let Ok(s) = l {
         return Json(s.last_state);
@@ -22,8 +23,22 @@ fn index(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State
     }
 }
 
-pub async fn launch(state_rx: Receiver<lg_ac::State>) {
-    let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(StateManager{state_rx, last_state: lg_ac::State::default()}));
+#[post("/state")]
+fn set_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) {
+    let l = state.lock();
+    if let Ok(_) = l {
+        // s.state_tx 
+    }
+}
+
+pub async fn launch(state_tx: Sender<lg_ac::State>, state_rx: Receiver<lg_ac::State>) {
+    let state_manager = StateManager {
+        state_tx,
+        state_rx,
+        last_state: lg_ac::State::default(),
+    };
+
+    let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(state_manager));
     
     let cloned = arc.clone();
     std::thread::spawn(move || {
@@ -44,7 +59,7 @@ pub async fn launch(state_rx: Receiver<lg_ac::State>) {
 
     let r = rocket::build()
     .manage(arc.clone())
-    .mount("/", routes![index])
+    .mount("/", routes![get_state, set_state])
     .launch().await;
     if let Err(_) = r {
         panic!("Rocket faild to launch")
