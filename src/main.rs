@@ -88,12 +88,17 @@ async fn main () {
 
             if let Some(t) = &temp {
                 let t = t.read_temp();
-                if let Ok(t) = t {
-                    let celsius = t.to_celsius();
-                    db.new_temp(celsius);
-                    current_state.current_temp = celsius;
-                    if let Err(e) = main_state_tx.send(current_state.clone()) {
-                        println!("Failed to send state update: {}", e);
+                match t {
+                    Ok(t) => {
+                        let celsius = t.to_celsius();
+                        db.new_temp(celsius);
+                        current_state.current_temp = celsius;
+                        if let Err(e) = main_state_tx.send(current_state.clone()) {
+                            println!("Failed to send state update: {}", e);
+                        }
+                    }
+                    Err(e) => {
+                        println!("Failed to read temp {}", e);
                     }
                 }
             }
