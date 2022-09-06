@@ -18,11 +18,16 @@ fn get_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::S
     let l = state.lock();
     if let Ok(mut s) = l {
         if let Ok(new_state) = s.state_rx.try_recv() {
+            println!("New State found in StateManager::state_rx");
+
             s.last_state = new_state;
             return Json(new_state);
         }
+
+        println!("No new State found in StateManager::state_rx");
         return Json(s.last_state);
     } else {
+        println!("Failed to lock API StateManager");
         return Json(lg_ac::State::default())
     }
 }
