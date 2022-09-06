@@ -23,11 +23,12 @@ jobs:
     - name: Install
       run: sudo apt-get install -y liblirc-dev libsqlite3-dev curl
 
-    - name: Rustup
-      run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-    - name: Switch to rust nightly
-      run: rustup -y install nightly && rustup -y default nightly
+    - name: rust-cargo
+      uses: actions-rs/cargo@v1.0.1
+      with:
+        # Cargo command to run (ex. `check` or `build`)
+        command: test
+        toolchain: nightly
 
     - name: Build
       run: cargo build --verbose
