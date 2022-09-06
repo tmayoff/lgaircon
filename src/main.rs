@@ -50,11 +50,11 @@ async fn main () {
     let (main_state_tx, main_state_rx) = (state_tx.clone(), state_rx.clone());
     let (main_control_tx, main_control_rx) = (control_tx.clone(), control_rx.clone());
     std::thread::spawn(move || {
+        let mut current_state = main_state_rx.recv().unwrap();
+
         let ctrlc_tx = main_control_tx.clone();
         ctrlc::set_handler(move || {
-            if let Err(e) = ctrlc_tx.send(Control {running: false}) {
-                panic!("Failed to send control+c signal: {}", e);
-            }
+            ctrlc_tx.send(Control {running: false}).expect("Failed to send control+c signal");
         }).expect("Failed to set ctrl+c handler");
 
         // ====== Initialize IR
@@ -64,7 +64,7 @@ async fn main () {
             Err(e) => println!("{}", e),
             Ok(_ir) => {
                 IR::startup_ir_read(_ir);
-                println!("Initialized IR.");        
+                println!("Initialized IR.");
             }
         }
 
@@ -72,11 +72,10 @@ async fn main () {
         let res = ds18b20::DS18B20::new();
         let mut temp: Option<ds18b20::DS18B20> = None;
         match res {
-            Err(e) => println!("{}", e),
+            Err(e) => println!("Failed to initialize temperature sensor {}", e),
             Ok(t) => temp = Some(t),
         }
 
-        let mut current_state = main_state_rx.recv().unwrap();
 
         loop {
             let ctrl = main_control_rx.try_recv();
@@ -87,12 +86,14 @@ async fn main () {
             }
 
             if let Some(t) = &temp {
+                println!("Reading temp");
                 let t = t.read_temp();
                 match t {
                     Ok(t) => {
                         let celsius = t.to_celsius();
                         db.new_temp(celsius);
                         current_state.current_temp = celsius;
+                        println!("\t {}", current_state.current_temp);
                         if let Err(e) = main_state_tx.send(current_state.clone()) {
                             println!("Failed to send state update: {}", e);
                         }
