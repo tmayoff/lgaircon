@@ -1,4 +1,5 @@
-use std::{thread::JoinHandle, collections::LinkedList, sync::mpsc::Sender};
+use std::{thread::JoinHandle, collections::LinkedList};
+use spmc::Sender;
 
 use crate::lg_ac::State;
 
@@ -10,7 +11,7 @@ pub struct IR {
 }
 
 impl IR {
-    pub fn new (sender: Sender<State>) -> Self {
+    pub fn new (sender: Sender<State>) -> Result<Self, String> {
         let ret = rust_lirc_client_sys::init("lgaircon", 1);
         if ret == -1 {
             println!("Initialization Failed\n");
@@ -18,15 +19,15 @@ impl IR {
 
         let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
         if fd_ret.is_err() {
-            println!("\n");
+            return Err(String::from("Failed to initialize"));
         }
 
-        Self {
+        Ok(Self {
             send_fd: fd_ret.unwrap(),
             running: true,
             state_queue: LinkedList::new(),
             sender
-        }
+        })
     }
 
     pub fn send_once (&mut self, state: State)  {
@@ -42,7 +43,7 @@ impl IR {
         println!("Sent IR.");
     }
 
-    pub fn startup_ir_read(self) -> JoinHandle<()> {
+    pub fn startup_ir_read(mut self) -> JoinHandle<()> {
          std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
             if ret == -1 {
@@ -50,7 +51,6 @@ impl IR {
             }
 
             loop {
-
                 println!("Receiving IR....");
                 let ret_c = rust_lirc_client_sys::nextcode();
                 if ret_c.is_err() {
@@ -65,7 +65,10 @@ impl IR {
                     match ret {
                         Err(r) => println!("Failed to decode lirc command: {}", r),
                         Ok(s) => {
-                            self.sender.send(s).unwrap();
+                            let res = self.sender.send(s);
+                            if let Err(e) = res {
+                                println!("Failed to send State {}", e);
+                            }
                         }
                     }
                 }

@@ -1,7 +1,10 @@
 use std::fmt;
 
-#[derive(PartialEq, Debug)]
+use serde::Serialize;
+
+#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub enum Mode {
+    Off,
     Fan,
     AI,
     Cool,
@@ -12,6 +15,7 @@ pub enum Mode {
 impl fmt::Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Mode::Off =>          write!(f, "OFF"),
             Mode::Fan =>          write!(f, "FAN"),
             Mode::AI =>           write!(f, "AI"),
             Mode::Cool =>         write!(f, "AC"),
@@ -21,8 +25,27 @@ impl fmt::Display for Mode {
     } 
 }
 
+impl Mode {
+    pub fn from_string(mode: &str) -> Mode {
+        if mode == "OFF" {
+            return Mode::Off;
+        } else if mode == "Fan" {
+            return Mode::Fan;
+        } else if mode == "AI" {
+            return Mode::AI;
+        } else if mode == "AC" {
+            return Mode::Cool;
+        } else if mode == "DEHUM" {
+            return Mode::Dehumidifier;
+        } else if mode == "HEAT" {
+            return Mode::Heat;
+        } else {
+            panic!("Unknown mode {}", mode);
+        }
+    }
+}
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
 pub enum FanMode {
     Number,
     Low,
@@ -43,13 +66,31 @@ impl fmt::Display for FanMode {
     } 
 }
 
+impl FanMode {
+    pub fn from_string(mode: &str) -> FanMode {
+        if mode == "LOW" {
+            return FanMode::Low;
+        } else if mode == "MID" {
+            return FanMode::Medium;
+        } else if mode == "HIGH" {
+            return FanMode::High;
+        } else if mode == "CHAOS" {
+            return FanMode::Chaos;
+        } else {
+            println!("Unknown fan mode {}", mode);
 
+            return FanMode::Number;
+        }
+    }
+}
+
+#[derive(Copy, Clone, Serialize)]
 pub struct State {
-    pub on: bool,
     pub mode: Mode,
     pub min_temp: i32,
     pub max_temp: i32,
-    pub cur_temp: i32,
+    pub target_temp: f64,
+    pub current_temp: f64,
     pub fan_speed: i32,
     pub fan_mode: FanMode,
 }
@@ -74,14 +115,6 @@ impl State {
         // get fan speed
         let fanspeed = parts.next().unwrap();
         match fanspeed {
-            "ON" => {
-                s.on = true;
-                return Ok(s);
-            },
-            "OFF" => {
-                s.on = false;
-                return Ok(s);
-            }
             "LOW" => s.fan_mode = FanMode::Low,
             "MID" => s.fan_mode = FanMode::Medium,
             "HIGH" => s.fan_mode = FanMode::High,
@@ -95,7 +128,7 @@ impl State {
 
         if parts_count > 2 {
             let temp = parts.next().unwrap().parse().expect("Expected a number");
-            s.cur_temp = temp;
+            s.target_temp = temp;
         }
 
         Ok(s)
@@ -105,6 +138,7 @@ impl State {
         let mut cmd = String::from("");
 
         match state.mode {
+            Mode::Off => cmd += "OFF",
             Mode::Fan => cmd += "FAN",
             Mode::Cool => cmd += "AC",
             Mode::Heat => cmd += "HEAT",
@@ -124,7 +158,7 @@ impl State {
 
         cmd += "_";
 
-        cmd += state.cur_temp.to_string().as_str();
+        cmd += state.target_temp.to_string().as_str();
 
         cmd
     }
@@ -133,11 +167,11 @@ impl State {
 impl Default for State {
     fn default() -> Self {
         State {
-            mode: Mode::Cool,
-            on: false,
+            mode: Mode::Off,
             min_temp: 18,
             max_temp: 30,
-            cur_temp: 18,
+            current_temp: 18.0,
+            target_temp: 18.0,
             fan_speed: 0,
             fan_mode: FanMode::Low,
         }
@@ -152,7 +186,7 @@ fn from_lirc_command_test() {
     assert_eq!(state.mode, Mode::Cool);
     assert_eq!(state.min_temp, 18);
     assert_eq!(state.max_temp, 30);
-    assert_eq!(state.cur_temp, 21);
+    assert_eq!(state.target_temp, 21.0);
     assert_eq!(state.fan_mode, FanMode::High);
 }
 
@@ -160,10 +194,10 @@ fn from_lirc_command_test() {
 fn from_state_test() {
     let s = State {
         mode: Mode::Cool,
-        on: true,
         min_temp: 18,
         max_temp: 30,
-        cur_temp: 21,
+        current_temp: 18.0,
+        target_temp: 21.0,
         fan_speed: 0,
         fan_mode: FanMode::High,
     };

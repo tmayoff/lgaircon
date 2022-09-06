@@ -74,6 +74,36 @@ impl DB {
         }
     }
 
+    pub fn get_state (&mut self) -> lg_ac::State {
+        let mut s = lg_ac::State::default();
+
+        if let Some(m) = self.get_setting("mode") {
+            s.mode = lg_ac::Mode::from_string(m.as_str());
+        }
+
+        if let Some(m) = self.get_setting("min_temp") {
+            s.min_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("max_temp") {
+            s.max_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("target_temp") {
+            s.target_temp = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("fan_speed") {
+            s.fan_speed = m.parse().expect("Expected a number");
+        }
+
+        if let Some(m) = self.get_setting("fan_mode") {
+            s.fan_mode = lg_ac::FanMode::from_string(m.as_str());
+        }
+
+        s
+    }
+
     pub fn new_temp(&mut self, temp: f64) {
         use schema::temperature;
         let new_temp = NewTemperature {
@@ -87,11 +117,6 @@ impl DB {
     }
 
     pub fn update_state(&mut self, new_state: lg_ac::State) {
-        match self.get_setting("on") {
-            None => self.add_setting("on", if new_state.on {"on"} else {"false"}),
-            Some(_) => self.update_setting("on", if new_state.on {"on"} else {"false"}),
-        }
-
         match self.get_setting("mode") {
             None => self.add_setting("mode", new_state.mode.to_string().as_str()),
             Some(_) => self.update_setting("mode", new_state.mode.to_string().as_str()),
@@ -107,9 +132,9 @@ impl DB {
             Some(_) => self.update_setting("max_temp", new_state.max_temp.to_string().as_str()),
         }
 
-        match self.get_setting("cur_temp") {
-            None => self.add_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
-            Some(_) => self.update_setting("cur_temp", new_state.cur_temp.to_string().as_str()),
+        match self.get_setting("target_temp") {
+            None => self.add_setting("target_temp", new_state.target_temp.to_string().as_str()),
+            Some(_) => self.update_setting("target_temp", new_state.target_temp.to_string().as_str()),
         }
 
         match self.get_setting("fan_speed") {
@@ -118,8 +143,8 @@ impl DB {
         }
 
         match self.get_setting("fan_mode") {
-            None => self.add_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
-            Some(_) => self.update_setting("fan_mode", new_state.cur_temp.to_string().as_str()),
+            None => self.add_setting("fan_mode", new_state.target_temp.to_string().as_str()),
+            Some(_) => self.update_setting("fan_mode", new_state.target_temp.to_string().as_str()),
         }
     }
 }
