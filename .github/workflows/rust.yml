@@ -22,13 +22,16 @@ jobs:
 
     - name: Install
       run: sudo apt-get install -y liblirc-dev libsqlite3-dev curl
-
+      
+    - name: rust-toolchain
+      uses: actions-rs/toolchain@v1.0.6
+      with:
+        toolchain: nightly
+      
     - name: rust-cargo
       uses: actions-rs/cargo@v1.0.1
       with:
-        # Cargo command to run (ex. `check` or `build`)
-        command: test
-        toolchain: nightly
+        command: build
 
     - name: Build
       run: cargo build --verbose
