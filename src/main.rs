@@ -97,8 +97,8 @@ async fn main () {
                             println!("Failed to send state update: {}", e);
                         }
                     }
-                    Err(e) => {
-                        println!("Failed to read temp {}", e);
+                    Err(_) => {
+                        println!("Failed to get temp");
                     }
                 }
             }
