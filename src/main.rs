@@ -103,11 +103,12 @@ async fn main () {
                 }
             }
 
-            // IR Receiver Update
-            let ir_update = main_state_rx.try_recv();
-            match ir_update {
+            // State Updates
+            let res = main_state_rx.try_recv();
+            match res {
                 Ok(update) => {
-                    db.update_state(update)
+                    current_state = update;
+                    db.update_state(update);
                 },
                 Err(err) => {
                     match err {
