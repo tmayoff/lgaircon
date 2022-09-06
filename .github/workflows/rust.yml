@@ -31,4 +31,5 @@ jobs:
     - name: rust-cargo
       uses: actions-rs/cargo@v1.0.1
       with:
+        toolchain: nightly
         command: build
