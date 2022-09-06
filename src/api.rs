@@ -21,7 +21,7 @@ fn get_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::S
             println!("New State found in StateManager::state_rx");
 
             s.last_state = new_state;
-            return Json(new_state);
+            return Json(s.last_state);
         }
 
         println!("No new State found in StateManager::state_rx");
