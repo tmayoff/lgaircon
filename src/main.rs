@@ -59,8 +59,7 @@ async fn main () {
 
         // ====== Initialize IR
         println!("Initializing IR...");
-        let res = IR::new(main_state_tx);
-        let ir: Option<IR> = None;
+        let res = IR::new(main_state_tx.clone());
         match res {
             Err(e) => println!("{}", e),
             Ok(_ir) => {
@@ -77,6 +76,8 @@ async fn main () {
             Ok(t) => temp = Some(t),
         }
 
+        let mut current_state = main_state_rx.recv().unwrap();
+
         loop {
             let ctrl = main_control_rx.try_recv();
             if let Ok(c) = ctrl {
@@ -88,7 +89,12 @@ async fn main () {
             if let Some(t) = &temp {
                 let t = t.read_temp();
                 if let Ok(t) = t {
-                    db.new_temp(t.to_celsius())
+                    let celsius = t.to_celsius();
+                    db.new_temp(celsius);
+                    current_state.current_temp = celsius;
+                    if let Err(e) = main_state_tx.send(current_state.clone()) {
+                        println!("Failed to send state update: {}", e);
+                    }
                 }
             }
 
@@ -115,6 +121,6 @@ async fn main () {
         }
     });
 
-    let apires = api::launch(state_tx.clone(), state_rx.clone());
-    apires.await;
+    let res = api::launch(state_tx.clone(), state_rx.clone());
+    res.await;
 }
