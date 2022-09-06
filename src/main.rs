@@ -76,7 +76,6 @@ async fn main () {
             Ok(t) => temp = Some(t),
         }
 
-
         loop {
             let ctrl = main_control_rx.try_recv();
             if let Ok(c) = ctrl {

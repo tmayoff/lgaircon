@@ -16,7 +16,11 @@ struct StateManager {
 #[get("/state")]
 fn get_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<lg_ac::State> {
     let l = state.lock();
-    if let Ok(s) = l {
+    if let Ok(mut s) = l {
+        if let Ok(new_state) = s.state_rx.try_recv() {
+            s.last_state = new_state;
+            return Json(new_state);
+        }
         return Json(s.last_state);
     } else {
         return Json(lg_ac::State::default())
@@ -40,22 +44,22 @@ pub async fn launch(state_tx: Sender<lg_ac::State>, state_rx: Receiver<lg_ac::St
 
     let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(state_manager));
     
-    let cloned = arc.clone();
-    std::thread::spawn(move || {
-        loop {
-            let l = cloned.lock();
-            if let Ok(mut s) = l {
-                let res = s.state_rx.try_recv();
-                if let Ok(new_s) = res {
-                    println!("Found new state");
-                    s.last_state = new_s;
-                }
-                std::mem::drop(s);
-            }
+    // let cloned = arc.clone();
+    // std::thread::spawn(move || {
+    //     loop {
+    //         let l = cloned.lock();
+    //         if let Ok(mut s) = l {
+    //             let res = s.state_rx.try_recv();
+    //             if let Ok(new_s) = res {
+    //                 println!("Found new state");
+    //                 s.last_state = new_s;
+    //             }
+    //             std::mem::drop(s);
+    //         }
 
-            std::thread::sleep(std::time::Duration::new(1, 0));
-        }
-    });
+    //         std::thread::sleep(std::time::Duration::new(1, 0));
+    //     }
+    // });
 
     let r = rocket::build()
     .manage(arc.clone())
