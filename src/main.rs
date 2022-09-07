@@ -33,6 +33,8 @@ async fn main () {
         panic!("failed to send initial control signal: {}", err);
     }
 
+    let (current_temp_tx, current_temp_rx) = crossbeam_channel::unbounded::<f64>();
+
     // =====  Initialize DB
     println!("Initializing DB...");
     let mut db = DB::new();
@@ -50,8 +52,6 @@ async fn main () {
     let (main_state_tx, main_state_rx) = (state_tx.clone(), state_rx.clone());
     let (main_control_tx, main_control_rx) = (control_tx.clone(), control_rx.clone());
     std::thread::spawn(move || {
-        let mut current_state = main_state_rx.recv().unwrap();
-
         let ctrlc_tx = main_control_tx.clone();
         ctrlc::set_handler(move || {
             ctrlc_tx.send(Control {running: false}).expect("Failed to send control+c signal");
@@ -91,9 +91,7 @@ async fn main () {
                     Ok(t) => {
                         let celsius = t.to_celsius();
                         db.new_temp(celsius);
-                        current_state.current_temp = celsius;
-                        println!("\t {}", current_state.current_temp);
-                        if let Err(e) = main_state_tx.send(current_state.clone()) {
+                        if let Err(e) = current_temp_tx.send(celsius) {
                             println!("Failed to send state update: {}", e);
                         }
                     }
@@ -107,7 +105,6 @@ async fn main () {
             let res = main_state_rx.try_recv();
             match res {
                 Ok(update) => {
-                    current_state = update;
                     db.update_state(update);
                 },
                 Err(err) => {
@@ -127,6 +124,6 @@ async fn main () {
         }
     });
 
-    let res = api::launch(state_tx.clone(), state_rx.clone());
+    let res = api::launch(state_tx.clone(), state_rx.clone(), current_temp_rx.clone());
     res.await;
 }

@@ -10,7 +10,9 @@ use crate::lg_ac;
 struct StateManager {
     state_tx: Sender<lg_ac::State>,
     state_rx: Receiver<lg_ac::State>,
+    current_temp_rx: Receiver<f64>,
     last_state: lg_ac::State,
+    last_temp: f64,
 }
 
 #[get("/state")]
@@ -40,35 +42,38 @@ fn set_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) {
     }
 }
 
-pub async fn launch(state_tx: Sender<lg_ac::State>, state_rx: Receiver<lg_ac::State>) {
+#[get("/current_temp")]
+fn get_current_temp(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<f64> {
+    let l = state.lock();
+    if let Ok(mut s) = l {
+        if let Ok(new_temp) = s.current_temp_rx.try_recv() {
+            println!("New temp found in StateManager::current_temp_rx");
+            s.last_temp = new_temp;
+            return Json(new_temp);
+        }
+
+        println!("No new State found in StateManager::state_rx");
+        return Json(s.last_temp);
+    } else {
+        println!("Failed to lock API StateManager");
+        return Json(0.0);
+    }
+}
+
+pub async fn launch(state_tx: Sender<lg_ac::State>, state_rx: Receiver<lg_ac::State>, current_temp_rx: Receiver<f64>) {
     let state_manager = StateManager {
         state_tx,
         state_rx,
+        current_temp_rx,
         last_state: lg_ac::State::default(),
+        last_temp: 0.0,
     };
 
     let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(state_manager));
-    
-    // let cloned = arc.clone();
-    // std::thread::spawn(move || {
-    //     loop {
-    //         let l = cloned.lock();
-    //         if let Ok(mut s) = l {
-    //             let res = s.state_rx.try_recv();
-    //             if let Ok(new_s) = res {
-    //                 println!("Found new state");
-    //                 s.last_state = new_s;
-    //             }
-    //             std::mem::drop(s);
-    //         }
-
-    //         std::thread::sleep(std::time::Duration::new(1, 0));
-    //     }
-    // });
 
     let r = rocket::build()
     .manage(arc.clone())
-    .mount("/", routes![get_state, set_state])
+    .mount("/", routes![get_state, set_state, get_current_temp])
     .launch().await;
     if let Err(_) = r {
         panic!("Rocket faild to launch")

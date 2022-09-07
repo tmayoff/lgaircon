@@ -90,7 +90,6 @@ pub struct State {
     pub min_temp: i32,
     pub max_temp: i32,
     pub target_temp: f64,
-    pub current_temp: f64,
     pub fan_speed: i32,
     pub fan_mode: FanMode,
 }
@@ -170,7 +169,6 @@ impl Default for State {
             mode: Mode::Off,
             min_temp: 18,
             max_temp: 30,
-            current_temp: 18.0,
             target_temp: 18.0,
             fan_speed: 0,
             fan_mode: FanMode::Low,
@@ -196,7 +194,6 @@ fn from_state_test() {
         mode: Mode::Cool,
         min_temp: 18,
         max_temp: 30,
-        current_temp: 18.0,
         target_temp: 21.0,
         fan_speed: 0,
         fan_mode: FanMode::High,
