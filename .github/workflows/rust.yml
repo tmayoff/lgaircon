@@ -11,25 +11,33 @@ env:
 
 jobs:
   build:
-
+    name: Rust ${{ matrix.target }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - armv7-unknown-linux-gnueabihf
 
     steps:
     - uses: actions/checkout@v3 
-    
-    - name: Update
-      run: sudo apt update && sudo apt upgrade
 
-    - name: Install
-      run: sudo apt-get install -y liblirc-dev libsqlite3-dev curl
-      
-    - name: rust-toolchain
-      uses: actions-rs/toolchain@v1.0.6
+    - name: Update
+      run: sudo apt-get -y update && sudo apt-get -y upgrade
+
+    - name: Build target image
+      run: docker build -t lgaircon:latest .
+
+    - uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
-      
-    - name: rust-cargo
-      uses: actions-rs/cargo@v1.0.1
+          toolchain: nightly
+          target: ${{matrix.target}}
+          override: true
+
+    - uses: actions-rs/cargo@v1
       with:
-        toolchain: nightly
-        command: build
+          use-cross: true
+          toolchain: nightly
+          command: build
+          args: --target ${{matrix.target}}
