@@ -23,6 +23,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3 
 
+    - name: Update
+      run: apt-get -y update && apt-get -y upgrade
+
+    - name: Install deps
+      run: apt-get -y install podman
+
+    - name: podman build -t lgaircon:latest .
+
     - uses: actions-rs/toolchain@v1
       with:
           toolchain: nightly
