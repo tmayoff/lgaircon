@@ -2,3 +2,6 @@
 xargo = true
 build-std = true
 default-target = "armv7-unknown-linux-gnueabihf"
+
+[target.armv7-unknown-linux-gnueabihf]
+image = "lgaircon:latest"
