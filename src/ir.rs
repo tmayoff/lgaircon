@@ -1,11 +1,10 @@
 use std::{thread::JoinHandle, collections::LinkedList};
-use spmc::Sender;
+use crossbeam_channel::Sender;
 
 use crate::lg_ac::State;
 
 pub struct IR {
     pub send_fd: i32,
-    running: bool,
     pub state_queue: LinkedList<State>,
     sender: Sender<State>,
 }
@@ -24,7 +23,6 @@ impl IR {
 
         Ok(Self {
             send_fd: fd_ret.unwrap(),
-            running: true,
             state_queue: LinkedList::new(),
             sender
         })
@@ -43,7 +41,7 @@ impl IR {
         println!("Sent IR.");
     }
 
-    pub fn startup_ir_read(mut self) -> JoinHandle<()> {
+    pub fn startup_ir_read(self) -> JoinHandle<()> {
          std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
             if ret == -1 {
