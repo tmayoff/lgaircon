@@ -11,23 +11,26 @@ env:
 
 jobs:
   build:
-
+    name: Rust ${{ matrix.target }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - armv7-unknown-linux-gnueabihf
 
     steps:
     - uses: actions/checkout@v3 
-    
-    - name: Update
-      run: sudo apt update && sudo apt upgrade
 
-    - name: Install
-      run: sudo apt-get install -y podman 
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{matrix.target}}
+          override: true
 
-    - name: Install cross-rs
-      run: cargo install cross --git https://github.com/cross-rs/cross
-
-    - name: Build image
-      run: podman build -t lgaircon:latest .
-
-    - name: Cross compile
-      run: cross build
+    - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --target ${{matrix.target}}
