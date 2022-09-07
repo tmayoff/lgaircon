@@ -93,10 +93,6 @@ impl DB {
             s.target_temp = m.parse().expect("Expected a number");
         }
 
-        if let Some(m) = self.get_setting("current_temp") {
-            s.current_temp = m.parse().expect("Expected a number");
-        }
-
         if let Some(m) = self.get_setting("fan_speed") {
             s.fan_speed = m.parse().expect("Expected a number");
         }
@@ -139,11 +135,6 @@ impl DB {
         match self.get_setting("target_temp") {
             None => self.add_setting("target_temp", new_state.target_temp.to_string().as_str()),
             Some(_) => self.update_setting("target_temp", new_state.target_temp.to_string().as_str()),
-        }
-
-        match self.get_setting("current_temp") {
-            None => self.add_setting("current_temp", new_state.current_temp.to_string().as_str()),
-            Some(_) => self.update_setting("current_temp", new_state.current_temp.to_string().as_str()),
         }
 
         match self.get_setting("fan_speed") {
