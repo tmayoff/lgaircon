@@ -25,12 +25,13 @@ jobs:
 
     - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           target: ${{matrix.target}}
           override: true
 
     - uses: actions-rs/cargo@v1
         with:
           use-cross: true
-          command: test
+          toolchain: nightly
+          command: build
           args: --target ${{matrix.target}}
