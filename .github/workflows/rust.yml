@@ -29,7 +29,8 @@ jobs:
     - name: Install deps
       run: apt-get -y install podman
 
-    - name: podman build -t lgaircon:latest .
+    - name: Build target image
+      run: podman build -t lgaircon:latest .
 
     - uses: actions-rs/toolchain@v1
       with:
