@@ -26,11 +26,8 @@ jobs:
     - name: Update
       run: sudo apt-get -y update && sudo apt-get -y upgrade
 
-    - name: Install deps
-      run: sudo apt-get -y install podman
-
     - name: Build target image
-      run: podman build -t lgaircon:latest .
+      run: docker build -t lgaircon:latest .
 
     - uses: actions-rs/toolchain@v1
       with:
