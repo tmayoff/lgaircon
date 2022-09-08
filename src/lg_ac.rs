@@ -118,6 +118,7 @@ impl State {
             "MID" => s.fan_mode = FanMode::Medium,
             "HIGH" => s.fan_mode = FanMode::High,
             "CHAOS" => s.fan_mode = FanMode::Chaos,
+            "OFF" => s.mode = Mode::Off,
             &_ => {
                 let f:i32 = fanspeed.parse().expect("Expected a number");
                 s.fan_mode = FanMode::Number;
