@@ -86,6 +86,7 @@ impl FanMode {
 
 #[derive(Copy, Clone, Serialize)]
 pub struct State {
+    pub updated: bool,
     pub mode: Mode,
     pub min_temp: i32,
     pub max_temp: i32,
@@ -167,6 +168,7 @@ impl State {
 impl Default for State {
     fn default() -> Self {
         State {
+            updated: true,
             mode: Mode::Off,
             min_temp: 18,
             max_temp: 30,
@@ -192,6 +194,7 @@ fn from_lirc_command_test() {
 #[test]
 fn from_state_test() {
     let s = State {
+        updated: true,
         mode: Mode::Cool,
         min_temp: 18,
         max_temp: 30,

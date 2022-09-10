@@ -1,72 +1,51 @@
-use core::panic;
-use std::sync::{Mutex, Arc};
-
-use rocket::serde::json::Json;
-use crossbeam_channel::{Receiver, Sender};
+use actix_web::{get, Responder, HttpServer, HttpResponse, App, web};
+use std::sync::{Arc, Mutex};
 
 use crate::lg_ac;
-use crate::db;
 
 #[derive(Clone)]
-struct StateManager {
-    // state_tx: Sender<lg_ac::State>,
-    // state_rx: Receiver<lg_ac::State>,
-    current_temp_rx: Receiver<f64>,
-    // last_state: lg_ac::State,
-    last_temp: f64,
+struct AppState {
+    current_state: Arc<Mutex<lg_ac::State>>,
+    current_temp: Arc<Mutex<f64>>,
 }
 
 #[get("/state")]
-fn get_state() -> Json<lg_ac::State> {
-    let mut db = db::DB::new();
-    let s = db.get_state();
-    Json(s)
-}
-
-#[post("/state")]
-fn set_state(state: &rocket::State<Arc::<Mutex<StateManager>>>) {
-    let l = state.lock();
-    if let Ok(_) = l {
-        // s.state_tx 
+async fn get_state(data: web::Data<AppState>) -> impl Responder {
+    let l = data.current_state.lock();
+    match l {
+        Ok(current_state) => {
+            return HttpResponse::Ok().json(*current_state);
+        },
+        Err(_) => {
+            return HttpResponse::InternalServerError().body("Error");
+        }
     }
 }
 
 #[get("/current_temp")]
-fn get_current_temp(state: &rocket::State<Arc::<Mutex<StateManager>>>) -> Json<f64> {
-    let l = state.lock();
-    if let Ok(mut s) = l {
-        if let Ok(new_temp) = s.current_temp_rx.try_recv() {
-            println!("New temp found in StateManager::current_temp_rx");
-            s.last_temp = new_temp;
-            return Json(new_temp);
+async fn get_current_temp(data: web::Data<AppState>) -> impl Responder {
+    let l = data.current_temp.lock();
+    match l {
+        Ok(current_temp) => {
+            return HttpResponse::Ok().json(*current_temp);
+        },
+        Err(_) => {
+            return HttpResponse::InternalServerError().body("Error");
         }
-
-        println!("No new State found in StateManager::state_rx");
-        return Json(s.last_temp);
-    } else {
-        println!("Failed to lock API StateManager");
-        return Json(0.0);
     }
 }
 
-pub async fn launch(_: Sender<lg_ac::State>, state_rx: Receiver<lg_ac::State>, current_temp_rx: Receiver<f64>) {
-    // let mut db = db::DB::new();
-    
-    let state_manager = StateManager {
-        // state_tx,
-        // state_rx,
-        current_temp_rx,
-        // last_state: lg_ac::State::default(),
-        last_temp: 0.0,
+pub async fn launch(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) -> std::io::Result<()> {
+    let app_state = AppState {
+        current_state,
+        current_temp
     };
 
-    let arc = Arc::<Mutex<StateManager>>::new(Mutex::new(state_manager));
-
-    let r = rocket::build()
-    .manage(arc.clone())
-    .mount("/", routes![get_state, set_state, get_current_temp])
-    .launch().await;
-    if let Err(_) = r {
-        panic!("Rocket faild to launch")
-    }
+    HttpServer::new(move || {
+        App::new().app_data(web::Data::new(app_state.clone()))
+        .service(get_state)
+        .service(get_current_temp)
+    }).bind(("0.0.0.0", 8000))?
+    .run()
+    .await
 }

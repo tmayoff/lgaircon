@@ -1,16 +1,15 @@
-use std::{thread::JoinHandle, collections::LinkedList};
-use crossbeam_channel::Sender;
+use std::{thread::JoinHandle, collections::LinkedList, sync::Arc, sync::Mutex};
 
 use crate::lg_ac::State;
 
 pub struct IR {
     pub send_fd: i32,
     pub state_queue: LinkedList<State>,
-    sender: Sender<State>,
+    current_state: Arc<Mutex<State>>
 }
 
 impl IR {
-    pub fn new (sender: Sender<State>) -> Result<Self, String> {
+    pub fn new (current_state: Arc<Mutex<State>>) -> Result<Self, String> {
         let ret = rust_lirc_client_sys::init("lgaircon", 1);
         if ret == -1 {
             println!("Initialization Failed\n");
@@ -24,7 +23,7 @@ impl IR {
         Ok(Self {
             send_fd: fd_ret.unwrap(),
             state_queue: LinkedList::new(),
-            sender
+            current_state
         })
     }
 
@@ -63,9 +62,16 @@ impl IR {
                     match ret {
                         Err(r) => println!("Failed to decode lirc command: {}", r),
                         Ok(s) => {
-                            let res = self.sender.send(s);
-                            if let Err(e) = res {
-                                println!("Failed to send State {}", e);
+
+                            // Lock and update state
+                            let l = self.current_state.lock();
+                            match l {
+                                Ok(mut current_state) => {
+                                    *current_state = s;
+                                }
+                                Err (e) => {
+                                    println!("IR::ir_thread: Failed to lock current_state {}", e);
+                                }
                             }
                         }
                     }

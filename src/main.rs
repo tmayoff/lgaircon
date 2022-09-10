@@ -1,8 +1,3 @@
-
-#![feature(proc_macro_hygiene, decl_macro)]
-#[macro_use]
-extern crate rocket;
-
 #[macro_use]
 extern crate diesel;
 
@@ -12,47 +7,30 @@ mod ir;
 mod ds18b20;
 mod api;
 
-use crossbeam_channel::TryRecvError;
+use std::sync::{Arc, Mutex};
+
 use ir::IR;
 use db::DB;
 
-struct Control {
-    running: bool,
-}
-
-#[rocket::main]
+#[tokio::main]
 async fn main () {
-    let c = Control{
-        running: true,
-    };
+    let current_state = Arc::new(Mutex::new(lg_ac::State::default()));
+    let current_temp = Arc::new(Mutex::new(0.0));
 
-    // Initial Messages
-    let (state_tx, state_rx) = crossbeam_channel::unbounded::<lg_ac::State>();
-    let (control_tx, control_rx) = crossbeam_channel::unbounded::<Control>();
-    if let Err(err) = control_tx.send(c) {
-        panic!("failed to send initial control signal: {}", err);
-    }
+    // =====  Initialize DB
+    println!("Initializing DB...");
+    let mut db = DB::new();
+    db.run_migrations();
+    println!("Initialized DB.");
 
-    let (current_temp_tx, current_temp_rx) = crossbeam_channel::unbounded::<f64>();
+    // Fill current state from DB
+    let mut l = current_state.lock().expect("Failed to lock current_state at start");
+    *l = db.get_state();
+    drop(l);
 
-    // Setup main thread
-    let (main_state_tx, main_state_rx) = (state_tx.clone(), state_rx.clone());
-    let (main_control_tx, main_control_rx) = (control_tx.clone(), control_rx.clone());
-    std::thread::spawn(move || {
-        // =====  Initialize DB
-        println!("Initializing DB...");
-        let mut db = DB::new();
-        db.run_migrations();
-        println!("Initialized DB.");
-
-        let ctrlc_tx = main_control_tx.clone();
-        ctrlc::set_handler(move || {
-            ctrlc_tx.send(Control {running: false}).expect("Failed to send control+c signal");
-        }).expect("Failed to set ctrl+c handler");
-
-        // ====== Initialize IR
-        println!("Initializing IR...");
-        let res = IR::new(main_state_tx.clone());
+    // ====== Initialize IR
+    println!("Initializing IR...");    
+    let res = IR::new(Arc::clone(&current_state));
         match res {
             Err(e) => println!("{}", e),
             Ok(_ir) => {
@@ -60,6 +38,11 @@ async fn main () {
                 println!("Initialized IR.");
             }
         }
+
+    // Initial Messages
+    let mt_current_state = Arc::clone(&current_state);
+    let mt_current_temp = Arc::clone(&current_temp);
+    std::thread::spawn(move || {
 
         // ===== Setup temperature sensor
         let res = ds18b20::DS18B20::new();
@@ -69,23 +52,7 @@ async fn main () {
             Ok(t) => temp = Some(t),
         }
 
-        // Get state from DB
-        let starting_state = db.get_state();
-        let res = main_state_tx.send(starting_state);
-        if let Err(r) = res {
-            println!("Failed to send starting state {}", r);
-        } else {
-            println!("Sent starting state");
-        }
-
         loop {
-            let ctrl = main_control_rx.try_recv();
-            if let Ok(c) = ctrl {
-                if !c.running {
-                    break;
-                }
-            }
-
             if let Some(t) = &temp {
                 println!("Reading temp");
                 let t = t.read_temp();
@@ -94,8 +61,11 @@ async fn main () {
                         let celsius = t.to_celsius();
                         println!("\t{}", celsius);
                         db.new_temp(celsius);
-                        if let Err(e) = current_temp_tx.send(celsius) {
-                            println!("Failed to send state update: {}", e);
+                        match mt_current_temp.lock() {
+                            Ok(mut current_temp) => {
+                                *current_temp = celsius;
+                            },
+                            Err(err) => println!("Failed to lock current temp {}", err),
                         }
                     }
                     Err(_) => {
@@ -105,18 +75,15 @@ async fn main () {
             }
 
             // State Updates
-            let res = main_state_rx.try_recv();
-            match res {
-                Ok(update) => {
-                    db.update_state(update);
-                },
-                Err(err) => {
-                    match err {
-                        TryRecvError::Disconnected => {
-                            println!("IR updater disconnected");
-                        },
-                        TryRecvError::Empty => (),
+            let l = mt_current_state.lock();
+            match l {
+                Ok(current_state) => {
+                    if current_state.updated {
+                        db.update_state(*current_state);
                     }
+                }
+                Err (e) => {
+                    println!("Failed to lock current state to save to DB {}", e);
                 }
             }
         }
@@ -127,6 +94,9 @@ async fn main () {
         }
     });
 
-    let res = api::launch(state_tx, state_rx, current_temp_rx.clone());
-    res.await;
+    let res = api::launch(Arc::clone(&current_state), Arc::clone(&current_temp));
+    match res.await {
+        Ok(res) => res,
+        Err(e) => println!("Error waiting for actix-web {}", e)
+    }
 }
