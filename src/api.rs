@@ -1,4 +1,4 @@
-use actix_web::{get, Responder, HttpServer, HttpResponse, App, web};
+use actix_web::{get, post, Responder, HttpServer, HttpResponse, App, web};
 use std::sync::{Arc, Mutex};
 
 use crate::lg_ac;
@@ -11,6 +11,21 @@ struct AppState {
 
 #[get("/state")]
 async fn get_state(data: web::Data<AppState>) -> impl Responder {
+    let l = data.current_state.lock();
+    match l {
+        Ok(current_state) => {
+            return HttpResponse::Ok().json(*current_state);
+        },
+        Err(_) => {
+            return HttpResponse::InternalServerError().body("Error");
+        }
+    }
+}
+
+#[post("/state")]
+async fn set_state(data: web::Data<AppState>) -> impl Responder {
+    // TODO get this working
+    println!("Posting state");
     let l = data.current_state.lock();
     match l {
         Ok(current_state) => {
@@ -44,6 +59,7 @@ pub async fn launch(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<M
     HttpServer::new(move || {
         App::new().app_data(web::Data::new(app_state.clone()))
         .service(get_state)
+        .service(set_state)
         .service(get_current_temp)
     }).bind(("0.0.0.0", 8000))?
     .run()

@@ -1,38 +1,34 @@
-use std::{thread::JoinHandle, collections::LinkedList, sync::Arc, sync::Mutex};
+use std::{thread::JoinHandle, sync::Arc, sync::Mutex};
 
 use crate::lg_ac::State;
 
+#[derive(Clone)]
 pub struct IR {
-    pub send_fd: i32,
-    pub state_queue: LinkedList<State>,
+    pub lirc_tx_fd: i32,
     current_state: Arc<Mutex<State>>
 }
 
 impl IR {
     pub fn new (current_state: Arc<Mutex<State>>) -> Result<Self, String> {
-        let ret = rust_lirc_client_sys::init("lgaircon", 1);
-        if ret == -1 {
-            println!("Initialization Failed\n");
-        }
-
-        let fd_ret = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
-        if fd_ret.is_err() {
-            return Err(String::from("Failed to initialize"));
+        let fd;
+        let res = rust_lirc_client_sys::get_local_socket("/var/run/lirc/lircd-tx", false);
+        match res {
+            Ok(_fd) => fd = _fd,
+            Err(_) => return Err(String::from("Failed to initialize IR")),
         }
 
         Ok(Self {
-            send_fd: fd_ret.unwrap(),
-            state_queue: LinkedList::new(),
+            lirc_tx_fd: fd,
             current_state
         })
     }
 
-    pub fn send_once (&mut self, state: State)  {
+    pub fn send_once (fd: i32, state: State)  {
         println!("Sending IR...");
 
         let cmd = State::from_state(state);
 
-        let r = rust_lirc_client_sys::send_one(self.send_fd, "LG_AC",  cmd.as_str());
+        let r = rust_lirc_client_sys::send_one(fd, "LG_AC",  cmd.as_str());
         if r == -1 {
             println!("Failed to send");
         }
@@ -67,6 +63,7 @@ impl IR {
                             let l = self.current_state.lock();
                             match l {
                                 Ok(mut current_state) => {
+                                    current_state.updated = true;
                                     *current_state = s;
                                 }
                                 Err (e) => {
