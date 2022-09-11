@@ -4,7 +4,9 @@ build-std = true
 default-target = "armv7-unknown-linux-gnueabihf"
 
 [target.armv7-unknown-linux-gnueabihf]
-image = "lgaircon:latest"
+# dockerfile = "armv7.Dockerfile"
+image = "lgaircon:armv7"
 
-[target.armv6-unknown-linux-gnueabihf]
-image = "lgaircon:latest"
+[target.arm-unknown-linux-gnueabihf]
+# dockerfile = "armv6.Dockerfile"
+image = "lgaircon:armv6"
