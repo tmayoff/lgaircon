@@ -31,13 +31,14 @@ async fn main () {
     // ====== Initialize IR
     println!("Initializing IR...");    
     let res = IR::new(Arc::clone(&current_state));
-        match res {
-            Err(e) => println!("{}", e),
-            Ok(_ir) => {
-                IR::startup_ir_read(_ir);
-                println!("Initialized IR.");
-            }
+    match res {
+        Err(e) => println!("{}", e),
+        Ok(mut ir) => {
+            ir.send_once(lg_ac::State::default());
+            IR::startup_ir_read(ir);
+            println!("Initialized IR.");
         }
+    }
 
     // Initial Messages
     let mt_current_state = Arc::clone(&current_state);

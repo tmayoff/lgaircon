@@ -1,6 +1,8 @@
-use std::{thread::JoinHandle, collections::LinkedList, sync::Arc, sync::Mutex};
+use std::{thread::{JoinHandle, sleep}, collections::LinkedList, sync::Arc, sync::Mutex, time::Duration};
 
 use crate::lg_ac::State;
+
+use sysfs_gpio::{Direction, Pin};
 
 pub struct IR {
     pub send_fd: i32,
@@ -38,6 +40,17 @@ impl IR {
         }
 
         println!("Sent IR.");
+
+        let led_pin = Pin::new(26);
+        led_pin.with_exported(|| {
+            led_pin.set_direction(Direction::Out).unwrap();
+            loop {
+                led_pin.set_value(0).unwrap();
+                sleep(Duration::from_millis(200));
+                led_pin.set_value(1).unwrap();
+                sleep(Duration::from_millis(200));
+            }
+        }).unwrap();
     }
 
     pub fn startup_ir_read(self) -> JoinHandle<()> {
