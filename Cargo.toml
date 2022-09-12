@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ctrlc = "3.2.3"
+# ctrlc = "3.2.3"
 rust-lirc-client-sys = "0.1.0"
 diesel = { version = "2.0.0", features = ["sqlite"] }
 diesel_migrations = "2.0.0"
 tokio = {version = "1.21.0", features = ["full"]}
 actix-web = "4.1.0"
-serde = "1.0.144"
+serde = {version = "1.0.144", features = ["derive"]}
 
 [[bin]]
 name = "lgaircon"
