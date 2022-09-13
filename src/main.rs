@@ -31,6 +31,7 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
             Err(err) => panic!("Couldn't start IR {}", err),
         }
         let lirc_tx_fd = ir.lirc_tx_fd;
+        ir.startup_ir_read();
 
         // =====  Initialize DB
         println!("Initializing DB...");

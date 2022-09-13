@@ -25,7 +25,6 @@ impl From<num::ParseIntError> for W1Error {
     }
 }
 
-
 pub struct MilliCelsius(u32);
 impl MilliCelsius {
     pub fn to_celsius(self) -> f64 {
@@ -47,7 +46,8 @@ impl DS18B20 {
                 })
             }
         }
-        panic!("Unable to find a DS18B20")
+
+        Err(io::Error::from(io::ErrorKind::NotFound))
     }
 
     pub fn read_raw(&self) -> io::Result<String> {
