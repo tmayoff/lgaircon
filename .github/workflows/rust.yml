@@ -22,9 +22,9 @@ jobs:
           - armv7-unknown-linux-gnueabihf
         include:
           - target: arm-unknown-linux-gnueabihf
-            docker: armv6.Dockerfile
+            docker: armv6
           - target: armv7-unknown-linux-gnueabihf
-            docker: armv7.Dockerfile
+            docker: armv7
 
     steps:
     - uses: actions/checkout@v3 
@@ -33,7 +33,7 @@ jobs:
       run: sudo apt-get -y update && sudo apt-get -y upgrade
 
     - name: Build target image
-      run: docker build -f ${{matrix.docker}} -t lgaircon:latest .
+      run: docker build -f ${{matrix.docker}}.Dockerfile -t lgaircon:${{matrix.docker}} .
 
     - uses: actions-rs/toolchain@v1
       with:
