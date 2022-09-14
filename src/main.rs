@@ -66,6 +66,7 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
             match l {
                 Ok(mut current_state) => {
                     if current_state.updated {
+                        println!("check_loop: found new state");
                         db.update_state(*current_state);
                         IR::send_once(lirc_tx_fd, *current_state);
                     }

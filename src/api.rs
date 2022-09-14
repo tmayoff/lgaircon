@@ -11,28 +11,34 @@ struct AppState {
 
 #[get("/state")]
 async fn get_state(data: web::Data<AppState>) -> impl Responder {
+    println!("get_state");
     let l = data.current_state.lock();
     match l {
         Ok(current_state) => {
+            println!("\tSent state");
             return HttpResponse::Ok().json(*current_state);
         },
         Err(_) => {
+            println!("\tailed to lock");
             return HttpResponse::InternalServerError().body("Error");
         }
     }
 }
 
 #[post("/state")]
-async fn set_state(data: web::Data<AppState>) -> impl Responder {
-    // TODO get this working
-    println!("Posting state");
+async fn set_state(body: web::Json<lg_ac::State>, data: web::Data<AppState>) -> impl Responder {
+    println!("set_state:: {:?}", body);
     let l = data.current_state.lock();
     match l {
-        Ok(current_state) => {
-            return HttpResponse::Ok().json(*current_state);
+        Ok(mut current_state) => {
+            println!("\tUpdated state");
+            *current_state = body.0;
+            current_state.updated = true;
+            return HttpResponse::Ok();
         },
         Err(_) => {
-            return HttpResponse::InternalServerError().body("Error");
+            println!("\tFailed to lock");
+            return HttpResponse::InternalServerError();
         }
     }
 }

@@ -1,8 +1,8 @@
 use std::fmt;
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Mode {
     Off,
     Fan,
@@ -45,7 +45,7 @@ impl Mode {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum FanMode {
     Number,
     Low,
@@ -84,7 +84,7 @@ impl FanMode {
     }
 }
 
-#[derive(Copy, Clone, Serialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct State {
     pub updated: bool,
     pub mode: Mode,
