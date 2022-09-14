@@ -20,9 +20,11 @@ jobs:
         target:
           - arm-unknown-linux-gnueabihf
           - armv7-unknown-linux-gnueabihf
-        docker:
-          - armv6.Dockerfile
-          - armv7.Dockerfile
+        include:
+          - target: arm-unknown-linux-gnueabihf
+            docker: armv6.Dockerfile
+          - target: armv7-unknown-linux-gnueabihf
+            docker: armv7.Dockerfile
 
     steps:
     - uses: actions/checkout@v3 
