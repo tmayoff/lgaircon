@@ -18,7 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         target:
+          - arm-unknown-linux-gnueabihf
           - armv7-unknown-linux-gnueabihf
+        docker:
+          - armv6.Dockerfile
+          - armv7.Dockerfile
 
     steps:
     - uses: actions/checkout@v3 
@@ -27,7 +31,7 @@ jobs:
       run: sudo apt-get -y update && sudo apt-get -y upgrade
 
     - name: Build target image
-      run: docker build -t lgaircon:latest .
+      run: docker build -f ${{matrix.docker}} -t lgaircon:latest .
 
     - uses: actions-rs/toolchain@v1
       with:
