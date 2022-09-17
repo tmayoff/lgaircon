@@ -7,6 +7,7 @@ Controller for my LG Airconditioner
 - https://github.com/raspberrypi/linux/issues/2993#issuecomment-497420228
 - DS18B20
 - https://www.thingiverse.com/thing:2349678
+- https://www.instructables.com/Reverse-engineering-of-an-Air-Conditioning-control/
 
 ## Cross Compile
 - https://medium.com/hackernoon/seamlessly-cross-compiling-rust-for-raspberry-pis-ede5e2bd3fe2
