@@ -1,85 +1,76 @@
-use std::fmt;
+use core::fmt;
+use std::str::FromStr;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Mode {
-    Off,
-    Fan,
+    OFF,
+    FAN,
     AI,
-    Cool,
-    Dehumidifier,
-    Heat,
+    AC,
+    DEHUM,
+    HEAT,
 }
 
 impl fmt::Display for Mode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Mode::Off =>          write!(f, "OFF"),
-            Mode::Fan =>          write!(f, "FAN"),
-            Mode::AI =>           write!(f, "AI"),
-            Mode::Cool =>         write!(f, "AC"),
-            Mode::Dehumidifier => write!(f, "DEHUM"),
-            Mode::Heat =>         write!(f, "HEAT"),
+            Mode::OFF => write!(f, "OFF"),
+            Mode::FAN => write!(f, "FAN"),
+            Mode::AI => write!(f, "AI"),
+            Mode::AC => write!(f, "AC"),
+            Mode::DEHUM => write!(f, "DEHUM"),
+            Mode::HEAT => write!(f, "HEAT"),
         }
-    } 
+    }
 }
 
-impl Mode {
-    pub fn from_string(mode: &str) -> Mode {
-        if mode == "OFF" {
-            return Mode::Off;
-        } else if mode == "Fan" {
-            return Mode::Fan;
-        } else if mode == "AI" {
-            return Mode::AI;
-        } else if mode == "AC" {
-            return Mode::Cool;
-        } else if mode == "DEHUM" {
-            return Mode::Dehumidifier;
-        } else if mode == "HEAT" {
-            return Mode::Heat;
-        } else {
-            panic!("Unknown mode {}", mode);
+impl FromStr for Mode {
+    type Err = ();
+
+    fn from_str(mode: &str) -> Result<Mode, Self::Err> {
+        match mode {
+            "OFF" => Ok(Mode::OFF),
+            "FAN" => Ok(Mode::FAN),
+            "AI" => Ok(Mode::AI),
+            "AC" => Ok(Mode::AC),
+            "DEHUM" => Ok(Mode::DEHUM),
+            "HEAT" => Ok(Mode::HEAT),
+            _ => Err(()),
         }
     }
 }
 
 #[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum FanMode {
-    Number,
-    Low,
-    Medium,
-    High,
-    Chaos
+    LOW,
+    MEDIUM,
+    HIGH,
+    CHAOS,
+}
+
+impl FromStr for FanMode {
+    type Err = ();
+
+    fn from_str(mode: &str) -> Result<FanMode, Self::Err> {
+        match mode {
+            "LOW" => Ok(FanMode::LOW),
+            "MEDIUM" => Ok(FanMode::MEDIUM),
+            "HIGH" => Ok(FanMode::HIGH),
+            "CHAOS" => Ok(FanMode::CHAOS),
+            _ => Err(()),
+        }
+    }
 }
 
 impl fmt::Display for FanMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FanMode::Number => write!(f, "NUMBER"),
-            FanMode::Low => write!(f, "LOW"),
-            FanMode::Medium => write!(f, "MID"),
-            FanMode::High => write!(f, "HIGH"),
-            FanMode::Chaos => write!(f, "CHAOS"),
-        }
-    } 
-}
-
-impl FanMode {
-    pub fn from_string(mode: &str) -> FanMode {
-        if mode == "LOW" {
-            return FanMode::Low;
-        } else if mode == "MID" {
-            return FanMode::Medium;
-        } else if mode == "HIGH" {
-            return FanMode::High;
-        } else if mode == "CHAOS" {
-            return FanMode::Chaos;
-        } else {
-            println!("Unknown fan mode {}", mode);
-
-            return FanMode::Number;
+            FanMode::LOW => write!(f, "LOW"),
+            FanMode::MEDIUM => write!(f, "MEDIUM"),
+            FanMode::HIGH => write!(f, "HIGH"),
+            FanMode::CHAOS => write!(f, "CHAOS"),
         }
     }
 }
@@ -97,70 +88,36 @@ pub struct State {
 
 impl State {
     pub fn from_lirc_command(command: &str) -> Result<State, &str> {
-
         let mut s: State = State::default();
         let cmd = command.split(' ').collect::<Vec<&str>>()[2];
         let parts_count = cmd.split('_').count();
         let mut parts = cmd.split('_');
 
-        let mode = parts.next().unwrap();
-        match mode {
-            "AC" => s.mode = Mode::Cool,
-            "AI" => s.mode = Mode::AI,
-            "HEAT" => s.mode = Mode::Heat,
-            "DEHUM" => s.mode = Mode::Dehumidifier,
-            _ => return Err("Failed to parse mode"),
-        }
+        let mode = parts.next().expect("Missing mode part of command");
+        s.mode = Mode::from_str(mode).expect("Failed to parse mode");
 
-        // get fan speed
-        let fanspeed = parts.next().unwrap();
-        match fanspeed {
-            "LOW" => s.fan_mode = FanMode::Low,
-            "MID" => s.fan_mode = FanMode::Medium,
-            "HIGH" => s.fan_mode = FanMode::High,
-            "CHAOS" => s.fan_mode = FanMode::Chaos,
-            "OFF" => s.mode = Mode::Off,
-            &_ => {
-                let f:i32 = fanspeed.parse().expect("Expected a number");
-                s.fan_mode = FanMode::Number;
-                s.fan_speed = f;
-            }
-        }
+        let part = parts.next().expect("Missing fan mode part of command");
+        s.fan_mode = FanMode::from_str(part).expect("Failed to parse fan mode");
 
         if parts_count > 2 {
-            let temp = parts.next().unwrap().parse().expect("Expected a number");
-            s.target_temp = temp;
+            let temp = parts.next().expect("Command missing temperature");
+            s.target_temp = temp.parse().expect("Expected a number");
         }
 
         Ok(s)
     }
 
     pub fn from_state(state: State) -> String {
+        println!("Sending new state on IR: {:?}", state);
+
         let mut cmd = String::from("");
 
-        match state.mode {
-            Mode::Off => cmd += "OFF",
-            Mode::Fan => cmd += "FAN",
-            Mode::Cool => cmd += "AC",
-            Mode::Heat => cmd += "HEAT",
-            Mode::Dehumidifier => cmd += "DEHUM",
-            Mode::AI => cmd += "AI",
-        }
-
+        cmd += &state.mode.to_string();
         cmd += "_";
-
-        match state.fan_mode {
-            FanMode::Number => cmd += state.fan_speed.to_string().as_str(),
-            FanMode::Low => cmd += "LOW",
-            FanMode::Medium => cmd += "MID",
-            FanMode::High => cmd += "HIGH",
-            FanMode::Chaos => cmd += "CHAOS",
-        }
-
+        cmd += &state.fan_mode.to_string();
         cmd += "_";
-
         cmd += state.target_temp.to_string().as_str();
-
+        println!("{cmd}");
         cmd
     }
 }
@@ -169,12 +126,12 @@ impl Default for State {
     fn default() -> Self {
         State {
             updated: true,
-            mode: Mode::Off,
+            mode: Mode::OFF,
             min_temp: 18,
             max_temp: 30,
             target_temp: 18.0,
             fan_speed: 0,
-            fan_mode: FanMode::Low,
+            fan_mode: FanMode::LOW,
         }
     }
 }
@@ -184,26 +141,26 @@ fn from_lirc_command_test() {
     let s = State::from_lirc_command("0000000000000028 00 AC_HIGH_21 LG_AC");
     assert_eq!(s.is_err(), false);
     let state = s.unwrap();
-    assert_eq!(state.mode, Mode::Cool);
+    assert_eq!(state.mode, Mode::AC);
     assert_eq!(state.min_temp, 18);
     assert_eq!(state.max_temp, 30);
     assert_eq!(state.target_temp, 21.0);
-    assert_eq!(state.fan_mode, FanMode::High);
+    assert_eq!(state.fan_mode, FanMode::HIGH);
 }
 
 #[test]
 fn from_state_test() {
     let s = State {
         updated: true,
-        mode: Mode::Cool,
+        mode: Mode::AC,
         min_temp: 18,
         max_temp: 30,
         target_temp: 21.0,
         fan_speed: 0,
-        fan_mode: FanMode::High,
+        fan_mode: FanMode::HIGH,
     };
 
     let cmd = State::from_state(s);
-    
+
     assert_eq!(cmd, "AC_HIGH_21");
 }
