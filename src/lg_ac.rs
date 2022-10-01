@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(PartialEq, Eq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Mode {
     Off,
+    On,
     Fan,
     AI,
     AC,
@@ -17,6 +18,7 @@ impl fmt::Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Mode::Off => write!(f, "OFF"),
+            Mode::On => write!(f, "ON"),
             Mode::Fan => write!(f, "FAN"),
             Mode::AI => write!(f, "AI"),
             Mode::AC => write!(f, "AC"),
@@ -32,6 +34,7 @@ impl FromStr for Mode {
     fn from_str(mode: &str) -> Result<Mode, Self::Err> {
         match mode {
             "OFF" => Ok(Mode::Off),
+            "ON" => Ok(Mode::On),
             "FAN" => Ok(Mode::Fan),
             "AI" => Ok(Mode::AI),
             "AC" => Ok(Mode::AC),
@@ -96,6 +99,10 @@ impl State {
         let mode = parts.next().expect("Missing mode part of command");
         s.mode = Mode::from_str(mode).expect("Failed to parse mode");
 
+        if s.mode == Mode::Off || s.mode == Mode::On {
+            return Ok(s);
+        }
+
         let part = parts.next().expect("Missing fan mode part of command");
         s.fan_mode = FanMode::from_str(part).expect("Failed to parse fan mode");
 
@@ -108,16 +115,20 @@ impl State {
     }
 
     pub fn from_state(state: State) -> String {
-        println!("Sending new state on IR: {:?}", state);
-
         let mut cmd = String::from("");
 
         cmd += &state.mode.to_string();
+        if state.mode == Mode::Off || state.mode == Mode::On {
+            return cmd;
+        }
+
         cmd += "_";
         cmd += &state.fan_mode.to_string();
-        cmd += "_";
-        cmd += state.target_temp.to_string().as_str();
-        println!("{cmd}");
+
+        if state.mode != Mode::Dehum && state.mode != Mode::Fan {
+            cmd += "_";
+            cmd += state.target_temp.to_string().as_str();
+        }
         cmd
     }
 }
@@ -146,6 +157,16 @@ fn from_lirc_command_test() {
     assert_eq!(state.max_temp, 30);
     assert_eq!(state.target_temp, 21.0);
     assert_eq!(state.fan_mode, FanMode::High);
+
+    let s = State::from_lirc_command("0000000000000008 00 OFF LG_AC");
+    assert!(s.is_ok());
+    let state = s.unwrap();
+    assert_eq!(state.mode, Mode::Off);
+
+    let s = State::from_lirc_command("0000000000000008 00 ON LG_AC");
+    assert!(s.is_ok());
+    let state = s.unwrap();
+    assert_eq!(state.mode, Mode::On);
 }
 
 #[test]
@@ -153,14 +174,39 @@ fn from_state_test() {
     let s = State {
         updated: true,
         mode: Mode::AC,
-        min_temp: 18,
-        max_temp: 30,
         target_temp: 21.0,
-        fan_speed: 0,
         fan_mode: FanMode::High,
+        ..Default::default()
     };
 
     let cmd = State::from_state(s);
-
     assert_eq!(cmd, "AC_HIGH_21");
+
+    let s = State {
+        updated: true,
+        mode: Mode::Dehum,
+        fan_mode: FanMode::Low,
+        ..Default::default()
+    };
+
+    let cmd = State::from_state(s);
+    assert_eq!(cmd, "DEHUM_LOW");
+
+    let s = State {
+        updated: true,
+        mode: Mode::Off,
+        ..Default::default()
+    };
+
+    let cmd = State::from_state(s);
+    assert_eq!(cmd, "OFF");
+
+    let s = State {
+        updated: true,
+        mode: Mode::On,
+        ..Default::default()
+    };
+
+    let cmd = State::from_state(s);
+    assert_eq!(cmd, "ON");
 }

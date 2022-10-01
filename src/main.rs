@@ -38,6 +38,14 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
         db.run_migrations();
         println!("Initialized DB.");
 
+        let mut last_state = lg_ac::State::default();
+        {
+            let l = current_state.lock();
+            if let Ok(s) = l {
+                last_state = *s;
+            }
+        }
+
         loop {
             if let Some(t) = &temp {
                 println!("Reading temp");
@@ -65,9 +73,19 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
             match l {
                 Ok(mut current_state) => {
                     if current_state.updated {
+                        if last_state.mode == lg_ac::Mode::Off {
+                            let on_state = lg_ac::State {
+                                mode: lg_ac::Mode::On,
+                                ..Default::default()
+                            };
+                            IR::send_once(lirc_tx_fd, on_state);
+                        }
+
                         println!("check_loop: found new state");
                         db.update_state(*current_state);
                         IR::send_once(lirc_tx_fd, *current_state);
+
+                        last_state = *current_state;
                     }
 
                     current_state.updated = false;
@@ -76,11 +94,6 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
                     println!("Failed to lock current state to save to DB {}", e);
                 }
             }
-        }
-
-        let ret = rust_lirc_client_sys::deinit();
-        if ret == -1 {
-            println!("Failed to deinit\n");
         }
     });
 }
