@@ -28,8 +28,9 @@ impl IR {
         let cmd = State::from_state(state);
 
         let r = rust_lirc_client_sys::send_one(fd, "LG_AC", cmd.as_str());
-        if r == -1 {
+        if r.is_err() {
             println!("Failed to send");
+            return;
         }
 
         println!("Sent IR.");
@@ -38,8 +39,9 @@ impl IR {
     pub fn startup_ir_read(self) -> JoinHandle<()> {
         std::thread::spawn(move || {
             let ret = rust_lirc_client_sys::init("lgaircon", 1);
-            if ret == -1 {
+            if ret.is_err() {
                 println!("Initialization Failed\n");
+                return;
             }
 
             loop {
