@@ -22,7 +22,7 @@ pub struct DB {
 impl DB {
     pub fn new() -> Self {
         let home_dir = std::env::var_os("HOME");
-        let dir_prefix: String;
+        let dir_prefix;
         match home_dir {
             Some(dir) => dir_prefix = dir.into_string().expect("Directory failed to be converted"),
             None => dir_prefix = String::from("/root"),

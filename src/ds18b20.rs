@@ -1,7 +1,7 @@
 // https://github.com/awendland/rpi-ds18b20-rust
 
-use std::{fs,io,num};
 use std::path::PathBuf;
+use std::{fs, io, num};
 
 static W1_PATH_PREFIX: &str = "/sys/bus/w1/devices";
 static W1_PATH_SUFFIX: &str = "w1_slave";
@@ -27,13 +27,13 @@ impl From<num::ParseIntError> for W1Error {
 
 pub struct MilliCelsius(u32);
 impl MilliCelsius {
-    pub fn to_celsius(self) -> f64 {
+    pub fn to_celsius(&self) -> f64 {
         (self.0 as f64) / 1000.0
     }
 }
 
 pub struct DS18B20 {
-    w1_id: String
+    w1_id: String,
 }
 
 impl DS18B20 {
@@ -41,9 +41,7 @@ impl DS18B20 {
         for entry in fs::read_dir(W1_PATH_PREFIX)? {
             let filename = entry?.file_name().into_string().unwrap();
             if filename.contains("28-") {
-                return Ok(DS18B20 {
-                    w1_id: filename
-                })
+                return Ok(DS18B20 { w1_id: filename });
             }
         }
 
@@ -77,8 +75,9 @@ mod tests {
 
     #[test]
     fn test_parse_temp() {
-        let temp_data ="6e 01 55 05 7f 7e a5 66 f2 : crc=f2 YES
-6e 01 55 05 7f 7e a5 66 f2 t=22875".to_string();
+        let temp_data = "6e 01 55 05 7f 7e a5 66 f2 : crc=f2 YES
+6e 01 55 05 7f 7e a5 66 f2 t=22875"
+            .to_string();
         assert_eq!(Ok(22875), parse_temp(temp_data));
     }
 }

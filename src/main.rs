@@ -1,16 +1,16 @@
 #[macro_use]
 extern crate diesel;
 
-mod lg_ac;
-mod db;
-mod ir;
-mod ds18b20;
 mod api;
+mod db;
+mod ds18b20;
+mod ir;
+mod lg_ac;
 
 use std::sync::{Arc, Mutex};
 
-use ir::IR;
 use db::DB;
+use ir::IR;
 
 fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) {
     std::thread::spawn(move || {
@@ -24,7 +24,7 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
 
         // ====== Initialize IR
         println!("Initializing IR...");
-        let ir: IR;
+        let ir;
         let res = IR::new(Arc::clone(&current_state));
         match res {
             Ok(_ir) => ir = _ir,
@@ -51,7 +51,7 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
                         match current_temp.lock() {
                             Ok(mut current_temp) => {
                                 *current_temp = celsius;
-                            },
+                            }
                             Err(err) => println!("Failed to lock current temp {}", err),
                         }
                     }
@@ -73,7 +73,7 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
 
                     current_state.updated = false;
                 }
-                Err (e) => {
+                Err(e) => {
                     println!("Failed to lock current state to save to DB {}", e);
                 }
             }
@@ -87,27 +87,28 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
 }
 
 #[tokio::main]
-async fn main () {
+async fn main() {
     let current_state = Arc::new(Mutex::new(lg_ac::State::default()));
     let current_temp = Arc::new(Mutex::new(0.0));
 
-    // =====  Initialize DB
-    println!("Initializing DB...");
-    let mut db = DB::new();
-    db.run_migrations();
-    println!("Initialized DB.");
-
     // Fill current state from DB
-    let mut l = current_state.lock().expect("Failed to lock current_state at start");
-    *l = db.get_state();
-    drop(l);
-    drop(db);
+    {
+        // =====  Initialize DB
+        println!("Initializing DB...");
+        let mut db = DB::new();
+        db.run_migrations();
+        println!("Initialized DB.");
+        let mut l = current_state
+            .lock()
+            .expect("Failed to lock current_state at start");
+        *l = db.get_state();
+    }
 
     check_loop(Arc::clone(&current_state), Arc::clone(&current_temp));
 
     let res = api::launch(Arc::clone(&current_state), Arc::clone(&current_temp));
     match res.await {
         Ok(res) => res,
-        Err(e) => println!("Error waiting for actix-web {}", e)
+        Err(e) => println!("Error waiting for actix-web {}", e),
     }
 }
