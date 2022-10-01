@@ -112,7 +112,11 @@ impl DB {
         }
 
         if let Some(m) = self.get_setting("fan_mode") {
-            s.fan_mode = lg_ac::FanMode::from_str(m.as_str()).expect("Fan mode unreadable from db");
+            let f = lg_ac::FanMode::from_str(m.as_str());
+            match f {
+                Ok(f) => s.fan_mode = f,
+                Err(_) => println!("Warning: Fan mode stored in DB ({}) is not readable", m),
+            }
         }
 
         s
