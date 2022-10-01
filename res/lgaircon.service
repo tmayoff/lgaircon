@@ -5,9 +5,8 @@ After=network-wait-online.target
 [Service]
 Type=simple
 Restart=always
+User=lg
 RestartSec=10
-User=river
-WorkingDirectory=
 ExecStart=/usr/local/bin/lgaircon
 
 [Install]
