@@ -5,23 +5,23 @@ use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Mode {
-    OFF,
-    FAN,
+    Off,
+    Fan,
     AI,
     AC,
-    DEHUM,
-    HEAT,
+    Dehum,
+    Heat,
 }
 
 impl fmt::Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Mode::OFF => write!(f, "OFF"),
-            Mode::FAN => write!(f, "FAN"),
+            Mode::Off => write!(f, "OFF"),
+            Mode::Fan => write!(f, "FAN"),
             Mode::AI => write!(f, "AI"),
             Mode::AC => write!(f, "AC"),
-            Mode::DEHUM => write!(f, "DEHUM"),
-            Mode::HEAT => write!(f, "HEAT"),
+            Mode::Dehum => write!(f, "DEHUM"),
+            Mode::Heat => write!(f, "HEAT"),
         }
     }
 }
@@ -31,12 +31,12 @@ impl FromStr for Mode {
 
     fn from_str(mode: &str) -> Result<Mode, Self::Err> {
         match mode {
-            "OFF" => Ok(Mode::OFF),
-            "FAN" => Ok(Mode::FAN),
+            "OFF" => Ok(Mode::Off),
+            "FAN" => Ok(Mode::Fan),
             "AI" => Ok(Mode::AI),
             "AC" => Ok(Mode::AC),
-            "DEHUM" => Ok(Mode::DEHUM),
-            "HEAT" => Ok(Mode::HEAT),
+            "DEHUM" => Ok(Mode::Dehum),
+            "HEAT" => Ok(Mode::Heat),
             _ => Err(()),
         }
     }
@@ -44,10 +44,10 @@ impl FromStr for Mode {
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum FanMode {
-    LOW,
-    MEDIUM,
-    HIGH,
-    CHAOS,
+    Low,
+    Medium,
+    High,
+    Chaos,
 }
 
 impl FromStr for FanMode {
@@ -55,10 +55,10 @@ impl FromStr for FanMode {
 
     fn from_str(mode: &str) -> Result<FanMode, Self::Err> {
         match mode {
-            "LOW" => Ok(FanMode::LOW),
-            "MEDIUM" => Ok(FanMode::MEDIUM),
-            "HIGH" => Ok(FanMode::HIGH),
-            "CHAOS" => Ok(FanMode::CHAOS),
+            "LOW" => Ok(FanMode::Low),
+            "MEDIUM" => Ok(FanMode::Medium),
+            "HIGH" => Ok(FanMode::High),
+            "CHAOS" => Ok(FanMode::Chaos),
             _ => Err(()),
         }
     }
@@ -67,10 +67,10 @@ impl FromStr for FanMode {
 impl fmt::Display for FanMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FanMode::LOW => write!(f, "LOW"),
-            FanMode::MEDIUM => write!(f, "MEDIUM"),
-            FanMode::HIGH => write!(f, "HIGH"),
-            FanMode::CHAOS => write!(f, "CHAOS"),
+            FanMode::Low => write!(f, "LOW"),
+            FanMode::Medium => write!(f, "MEDIUM"),
+            FanMode::High => write!(f, "HIGH"),
+            FanMode::Chaos => write!(f, "CHAOS"),
         }
     }
 }
@@ -126,12 +126,12 @@ impl Default for State {
     fn default() -> Self {
         State {
             updated: true,
-            mode: Mode::OFF,
+            mode: Mode::Off,
             min_temp: 18,
             max_temp: 30,
             target_temp: 18.0,
             fan_speed: 0,
-            fan_mode: FanMode::LOW,
+            fan_mode: FanMode::Low,
         }
     }
 }
@@ -145,7 +145,7 @@ fn from_lirc_command_test() {
     assert_eq!(state.min_temp, 18);
     assert_eq!(state.max_temp, 30);
     assert_eq!(state.target_temp, 21.0);
-    assert_eq!(state.fan_mode, FanMode::HIGH);
+    assert_eq!(state.fan_mode, FanMode::High);
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn from_state_test() {
         max_temp: 30,
         target_temp: 21.0,
         fan_speed: 0,
-        fan_mode: FanMode::HIGH,
+        fan_mode: FanMode::High,
     };
 
     let cmd = State::from_state(s);
