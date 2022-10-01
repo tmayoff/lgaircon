@@ -24,12 +24,11 @@ fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f
 
         // ====== Initialize IR
         println!("Initializing IR...");
-        let ir;
         let res = IR::new(Arc::clone(&current_state));
-        match res {
-            Ok(_ir) => ir = _ir,
+        let ir = match res {
+            Ok(_ir) => _ir,
             Err(err) => panic!("Couldn't start IR {}", err),
-        }
+        };
         let lirc_tx_fd = ir.lirc_tx_fd;
         ir.startup_ir_read();
 

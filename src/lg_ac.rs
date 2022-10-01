@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum Mode {
     OFF,
     FAN,
@@ -42,7 +42,7 @@ impl FromStr for Mode {
     }
 }
 
-#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum FanMode {
     LOW,
     MEDIUM,
@@ -139,7 +139,7 @@ impl Default for State {
 #[test]
 fn from_lirc_command_test() {
     let s = State::from_lirc_command("0000000000000028 00 AC_HIGH_21 LG_AC");
-    assert_eq!(s.is_err(), false);
+    assert!(s.is_ok());
     let state = s.unwrap();
     assert_eq!(state.mode, Mode::AC);
     assert_eq!(state.min_temp, 18);

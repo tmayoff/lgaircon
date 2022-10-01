@@ -22,11 +22,10 @@ pub struct DB {
 impl DB {
     pub fn new() -> Self {
         let home_dir = std::env::var_os("HOME");
-        let dir_prefix;
-        match home_dir {
-            Some(dir) => dir_prefix = dir.into_string().expect("Directory failed to be converted"),
-            None => dir_prefix = String::from("/root"),
-        }
+        let dir_prefix = match home_dir {
+            Some(dir) => dir.into_string().expect("Directory failed to be converted"),
+            None => String::from("/root"),
+        };
 
         let db_path = dir_prefix + "/app.sqlite";
         println!("Using DB file {}", db_path);
@@ -41,7 +40,7 @@ impl DB {
         self.connection.run_pending_migrations(MIGRATIONS).unwrap();
     }
 
-    pub fn add_setting<'a>(&mut self, name: String, value: String) {
+    pub fn add_setting(&mut self, name: String, value: String) {
         use schema::state;
         let new_state = NewSetting {
             name: name.as_str(),
@@ -54,7 +53,7 @@ impl DB {
         ret.expect("Error adding new setting");
     }
 
-    pub fn update_setting<'a>(&mut self, name: String, value: String) {
+    pub fn update_setting(&mut self, name: String, value: String) {
         use schema::state;
         let new_state = NewSetting {
             name: name.as_str(),
@@ -74,16 +73,14 @@ impl DB {
             .filter(state::name.eq(name))
             .load::<self::models::Setting>(&mut self.connection);
         match ret {
-            Err(_) => {
-                return None;
-            }
+            Err(_) => None,
             Ok(vals) => {
-                if vals.len() == 0 {
+                if vals.is_empty() {
                     return None;
                 }
 
                 let setting = vals[0].clone();
-                return Some(String::from(setting.val));
+                Some(setting.val)
             }
         }
     }
