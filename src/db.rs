@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use diesel::prelude::*;
 use diesel::SqliteConnection;
 use diesel_migrations::embed_migrations;
@@ -39,9 +41,12 @@ impl DB {
         self.connection.run_pending_migrations(MIGRATIONS).unwrap();
     }
 
-    pub fn add_setting<'a>(&mut self, name: &'a str, value: &'a str) {
+    pub fn add_setting<'a>(&mut self, name: String, value: String) {
         use schema::state;
-        let new_state = NewSetting { name, val: value };
+        let new_state = NewSetting {
+            name: name.as_str(),
+            val: value.as_str(),
+        };
 
         let ret = diesel::insert_into(state::table)
             .values(&new_state)
@@ -49,11 +54,14 @@ impl DB {
         ret.expect("Error adding new setting");
     }
 
-    pub fn update_setting<'a>(&mut self, name: &'a str, value: &'a str) {
+    pub fn update_setting<'a>(&mut self, name: String, value: String) {
         use schema::state;
-        let new_state = NewSetting { name, val: value };
+        let new_state = NewSetting {
+            name: name.as_str(),
+            val: value.as_str(),
+        };
 
-        let ret = diesel::update(state::table.find(name))
+        let ret = diesel::update(state::table.find(&name))
             .set(&new_state)
             .execute(&mut self.connection);
         ret.expect("Error updating setting");
@@ -84,7 +92,7 @@ impl DB {
         let mut s = lg_ac::State::default();
 
         if let Some(m) = self.get_setting("mode") {
-            s.mode = lg_ac::Mode::from_string(m.as_str());
+            s.mode = lg_ac::Mode::from_str(m.as_str()).expect("Mode unreadable from db");
         }
 
         if let Some(m) = self.get_setting("min_temp") {
@@ -104,7 +112,7 @@ impl DB {
         }
 
         if let Some(m) = self.get_setting("fan_mode") {
-            s.fan_mode = lg_ac::FanMode::from_string(m.as_str());
+            s.fan_mode = lg_ac::FanMode::from_str(m.as_str()).expect("Fan mode unreadable from db");
         }
 
         s
@@ -122,35 +130,47 @@ impl DB {
 
     pub fn update_state(&mut self, new_state: lg_ac::State) {
         match self.get_setting("mode") {
-            None => self.add_setting("mode", new_state.mode.to_string().as_str()),
-            Some(_) => self.update_setting("mode", new_state.mode.to_string().as_str()),
+            None => self.add_setting(String::from("mode"), new_state.mode.to_string()),
+            Some(_) => self.update_setting(String::from("mode"), new_state.mode.to_string()),
         }
 
         match self.get_setting("min_temp") {
-            None => self.add_setting("min_temp", new_state.min_temp.to_string().as_str()),
-            Some(_) => self.update_setting("min_temp", new_state.min_temp.to_string().as_str()),
-        }
-
-        match self.get_setting("max_temp") {
-            None => self.add_setting("max_temp", new_state.max_temp.to_string().as_str()),
-            Some(_) => self.update_setting("max_temp", new_state.max_temp.to_string().as_str()),
-        }
-
-        match self.get_setting("target_temp") {
-            None => self.add_setting("target_temp", new_state.target_temp.to_string().as_str()),
+            None => self.add_setting(String::from("min_temp"), new_state.min_temp.to_string()),
             Some(_) => {
-                self.update_setting("target_temp", new_state.target_temp.to_string().as_str())
+                self.update_setting(String::from("min_temp"), new_state.min_temp.to_string())
             }
         }
 
+        match self.get_setting("max_temp") {
+            None => self.add_setting(String::from("max_temp"), new_state.max_temp.to_string()),
+            Some(_) => {
+                self.update_setting(String::from("max_temp"), new_state.max_temp.to_string())
+            }
+        }
+
+        match self.get_setting("target_temp") {
+            None => self.add_setting(
+                String::from("target_temp"),
+                new_state.target_temp.to_string(),
+            ),
+            Some(_) => self.update_setting(
+                String::from("target_temp"),
+                new_state.target_temp.to_string(),
+            ),
+        }
+
         match self.get_setting("fan_speed") {
-            None => self.add_setting("fan_speed", new_state.fan_speed.to_string().as_str()),
-            Some(_) => self.update_setting("fan_speed", new_state.fan_speed.to_string().as_str()),
+            None => self.add_setting(String::from("fan_speed"), new_state.fan_speed.to_string()),
+            Some(_) => {
+                self.update_setting(String::from("fan_speed"), new_state.fan_speed.to_string())
+            }
         }
 
         match self.get_setting("fan_mode") {
-            None => self.add_setting("fan_mode", new_state.target_temp.to_string().as_str()),
-            Some(_) => self.update_setting("fan_mode", new_state.target_temp.to_string().as_str()),
+            None => self.add_setting(String::from("fan_mode"), new_state.target_temp.to_string()),
+            Some(_) => {
+                self.update_setting(String::from("fan_mode"), new_state.target_temp.to_string())
+            }
         }
     }
 }
