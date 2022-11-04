@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use db::DB;
 use ir::IR;
 
-fn check_loop(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) {
+fn start_main_thread(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) {
     std::thread::spawn(move || {
         // ===== Setup temperature sensor
         let res = ds18b20::DS18B20::new();
@@ -116,7 +116,7 @@ async fn main() {
         *l = db.get_state();
     }
 
-    check_loop(Arc::clone(&current_state), Arc::clone(&current_temp));
+    start_main_thread(Arc::clone(&current_state), Arc::clone(&current_temp));
 
     let res = api::launch(Arc::clone(&current_state), Arc::clone(&current_temp));
     match res.await {
