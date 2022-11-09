@@ -13,9 +13,11 @@ use db::DB;
 use ir::IR;
 
 fn web_server(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) {
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(async move { api::launch(current_state, current_temp).await })
-        .expect("Failed to launch Actix");
+    std::thread::spawn(|| {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async move { api::launch(current_state, current_temp).await })
+            .expect("Failed to launch Actix");
+    });
 }
 
 #[tokio::main]
