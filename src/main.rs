@@ -27,7 +27,6 @@ async fn main() -> ! {
 
     web_server(current_state.clone(), current_temp.clone());
 
-    // Fill current state from DB
     // =====  Initialize DB
     println!("Initializing DB...");
     let mut db = DB::new();
@@ -35,6 +34,7 @@ async fn main() -> ! {
     println!("Initialized DB.");
 
     {
+        // Fill current state from DB
         let mut l = current_state
             .lock()
             .expect("Failed to lock current_state at start");
