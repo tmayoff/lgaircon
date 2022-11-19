@@ -7,21 +7,30 @@ mod ds18b20;
 mod ir;
 mod lg_ac;
 
+use crossbeam_channel::unbounded;
 use std::sync::{Arc, Mutex};
 
 use db::DB;
 use ir::IR;
 
-fn web_server(current_state: Arc<Mutex<lg_ac::State>>, current_temp: Arc<Mutex<f64>>) {
+fn web_server(
+    state: (
+        crossbeam_channel::Sender<lg_ac::State>,
+        crossbeam_channel::Receiver<lg_ac::State>,
+    ),
+    current_temp: Arc<Mutex<f64>>,
+) {
     std::thread::spawn(|| {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async move { api::launch(current_state, current_temp).await })
+        rt.block_on(async move { api::launch(state, current_temp).await })
             .expect("Failed to launch Actix");
     });
 }
 
 #[tokio::main]
 async fn main() -> ! {
+    let (state_pub, state_sub) = unbounded::<lg_ac::State>();
+
     let current_state = Arc::new(Mutex::new(lg_ac::State::default()));
     let current_temp = Arc::new(Mutex::new(0.0));
 
@@ -39,6 +48,9 @@ async fn main() -> ! {
             .lock()
             .expect("Failed to lock current_state at start");
         *l = db.get_state();
+        state_pub
+            .send(db.get_state())
+            .expect("Failed to publish new state");
     }
 
     // ===== Setup temperature sensor

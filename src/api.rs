@@ -5,7 +5,10 @@ use crate::lg_ac;
 
 #[derive(Clone)]
 struct AppState {
-    current_state: Arc<Mutex<lg_ac::State>>,
+    state: (
+        crossbeam_channel::Sender<lg_ac::State>,
+        crossbeam_channel::Receiver<lg_ac::State>,
+    ),
     current_temp: Arc<Mutex<f64>>,
 }
 
@@ -53,11 +56,14 @@ async fn get_current_temp(data: web::Data<AppState>) -> impl Responder {
 }
 
 pub async fn launch(
-    current_state: Arc<Mutex<lg_ac::State>>,
+    state: (
+        crossbeam_channel::Sender<lg_ac::State>,
+        crossbeam_channel::Receiver<lg_ac::State>,
+    ),
     current_temp: Arc<Mutex<f64>>,
 ) -> std::io::Result<()> {
     let app_state = AppState {
-        current_state,
+        state,
         current_temp,
     };
 
